@@ -143,7 +143,7 @@ export default {
                 name: "High Ticket Offer Validation Report",
                 description: `Comprehensive validation for: ${intake.offerName}`,
               },
-              unit_amount: 4900, // $49.00
+              unit_amount: 100, // $1.00
             },
             quantity: 1,
           },
