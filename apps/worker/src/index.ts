@@ -3,6 +3,7 @@ import { checkRateLimit, getClientIP } from "./rateLimit";
 import { generateReport } from "./reportGenerator";
 import { generatePDF } from "./pdfGenerator";
 import { sendReportEmail } from "./email";
+import { handleResend } from "./resend";
 
 function cors(origin?: string | null): HeadersInit {
   return {
@@ -35,7 +36,6 @@ function generateToken(): string {
 }
 
 async function verifyTurnstile(token: string, secretKey: string, ip: string): Promise<boolean> {
-  // Skip in dev if token is "dev-bypass"
   if (token === "dev-bypass") return true;
 
   const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -57,7 +57,6 @@ function validateIntake(intake: IntakeData): string | null {
     if (!intake[field]) return `Missing required field: ${field}`;
   }
 
-  // Size limits
   const textFields: (keyof IntakeData)[] = [
     "problemStatement", "costOfInaction", "desiredOutcome",
     "uniqueMechanism", "mainAlternatives", "proofAssets", "keyDependencies",
@@ -87,6 +86,11 @@ export default {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
 
+    // POST /api/resend — support email resend
+    if (method === "POST" && path === "/api/resend") {
+      return handleResend(request, env);
+    }
+
     // POST /api/create-checkout
     if (method === "POST" && path === "/api/create-checkout") {
       const rl = await checkRateLimit(env.OFFER_KV, `checkout:${ip}`, 10);
@@ -103,18 +107,14 @@ export default {
       if (!email || !email.includes("@")) return err("Valid email required");
       if (!turnstileToken) return err("Turnstile token required");
 
-      // Verify Turnstile
       const turnstileValid = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET_KEY, ip);
       if (!turnstileValid) return err("Bot verification failed", 403);
 
-      // Validate intake
       const validationError = validateIntake(intake);
       if (validationError) return err(validationError);
 
-      // Create a pre-record with a pending token
       const reportToken = generateToken();
 
-      // Store preliminary record (not paid yet)
       const record: KVRecord = {
         intake,
         email,
@@ -125,7 +125,6 @@ export default {
         stripeSessionId: "",
       };
 
-      // Create Stripe session
       const stripe = await import("stripe");
       const stripeClient = new (stripe.default)(env.STRIPE_SECRET_KEY, {
         httpClient: stripe.default.createFetchHttpClient(),
@@ -143,7 +142,7 @@ export default {
                 name: "High Ticket Offer Validation Report",
                 description: `Comprehensive validation for: ${intake.offerName}`,
               },
-              unit_amount: 14900, // $149.00
+              unit_amount: 14900,
             },
             quantity: 1,
           },
@@ -156,13 +155,12 @@ export default {
         },
       });
 
-      // Store mapping: sessionId -> reportToken
       record.stripeSessionId = session.id;
       await env.OFFER_KV.put(`report:${reportToken}`, JSON.stringify(record), {
-        expirationTtl: 60 * 60 * 24 * 90, // 90 days
+        expirationTtl: 60 * 60 * 24 * 90,
       });
       await env.OFFER_KV.put(`session:${session.id}`, reportToken, {
-        expirationTtl: 60 * 60 * 24 * 7, // 7 days
+        expirationTtl: 60 * 60 * 24 * 7,
       });
 
       return json({ checkoutUrl: session.url, reportToken });
@@ -176,7 +174,6 @@ export default {
       const rl = await checkRateLimit(env.OFFER_KV, `complete:${ip}`, 10);
       if (!rl.allowed) return err("Rate limit exceeded", 429);
 
-      // Look up reportToken
       const reportToken = await env.OFFER_KV.get(`session:${sessionId}`);
       if (!reportToken) return err("Session not found", 404);
 
@@ -185,12 +182,10 @@ export default {
 
       const record = JSON.parse(raw) as KVRecord;
 
-      // If already generated, return cached
       if (record.generated && record.reportJson) {
         return json({ reportToken, cached: true });
       }
 
-      // Verify payment with Stripe
       const stripe = await import("stripe");
       const stripeClient = new (stripe.default)(env.STRIPE_SECRET_KEY, {
         httpClient: stripe.default.createFetchHttpClient(),
@@ -201,10 +196,8 @@ export default {
         return err("Payment not completed", 402);
       }
 
-      // Mark as paid
       record.paid = true;
 
-      // Generate report
       const useRealAI = env.USE_REAL_AI === "true";
       const reportJson = await generateReport(record.intake, useRealAI, env.OPENAI_API_KEY);
 
@@ -215,7 +208,6 @@ export default {
         expirationTtl: 60 * 60 * 24 * 90,
       });
 
-      // Send email (non-blocking)
       ctx.waitUntil(
         sendReportEmail({
           to: record.email,
@@ -246,7 +238,6 @@ export default {
         return err("Report not ready", 404);
       }
 
-      // Increment usage
       record.usageCount = (record.usageCount || 0) + 1;
       await env.OFFER_KV.put(`report:${token}`, JSON.stringify(record), {
         expirationTtl: 60 * 60 * 24 * 90,
