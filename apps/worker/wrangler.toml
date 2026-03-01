@@ -5,12 +5,12 @@ compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "OFFER_KV"
-id = "YOUR_KV_NAMESPACE_ID"
-preview_id = "YOUR_KV_PREVIEW_NAMESPACE_ID"
+id = "d22cbdcb8e6445b5b8dde2779924e63a"
+preview_id = "8d337dd144244fb5ae65f639ff7b04b4"
 
 [vars]
 USE_REAL_AI = "false"
-WORKER_URL = "https://worker.offerintegrity.io"
+WORKER_URL = "https://api.offerintegrity.io"
 APP_URL = "https://offerintegrity.io"
 
 # Secrets (set via wrangler secret put):
