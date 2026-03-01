@@ -9,7 +9,7 @@ export async function sendReportEmail(params: {
 }): Promise<void> {
   const { to, offerName, reportToken, verdict, scorePercent, appUrl, resendApiKey } = params;
   const reportUrl = `${appUrl}/report/${reportToken}`;
-  const pdfUrl = `${appUrl}/api/report/${reportToken}/pdf`;
+  const pdfUrl = `https://api.offerintegrity.io/api/report/${reportToken}/pdf`;
 
   const html = `
 <!DOCTYPE html>
