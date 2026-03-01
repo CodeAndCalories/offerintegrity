@@ -1,4 +1,5 @@
-"use client";
+"use client"
+export const runtime = "edge";
 import { useState } from "react";
 import Nav from "@/components/Nav";
 import { getPdfUrl } from "@/lib/api";
