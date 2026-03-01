@@ -1,8 +1,8 @@
 {
   "name": "offerintegrity",
   "private": true,
-  "workspaces": ["apps/web", "apps/worker"],
   "scripts": {
+    "build": "cd apps/web && npm install && npx @cloudflare/next-on-pages",
     "dev:web": "cd apps/web && npm run dev",
     "dev:worker": "cd apps/worker && npm run dev",
     "build:web": "cd apps/web && npm run build",
