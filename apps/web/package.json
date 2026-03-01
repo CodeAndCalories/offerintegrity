@@ -12,7 +12,7 @@
     "preview": "npx wrangler pages dev .vercel/output/static"
   },
   "dependencies": {
-    "next": "^16.1.6",
+    "next": "15.4.11",
     "react": "^18",
     "react-dom": "^18"
   },
@@ -24,10 +24,7 @@
     "autoprefixer": "^10.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-<<<<<<< HEAD
     "typescript": "^5",
-=======
->>>>>>> ae73ee0f46e9cb30d37700733fd7bfd3b6d6532a
     "vercel": "^37.0.0"
   }
 }
