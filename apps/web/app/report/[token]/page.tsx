@@ -5,9 +5,7 @@ import ReportClient from "./ReportClient";
 async function getReport(token: string) {
   const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL || "http://localhost:8787";
   try {
-    const res = await fetch(`${workerUrl}/api/report/${token}`, {
-      next: { revalidate: 3600 },
-    });
+    const res = await fetch(`${workerUrl}/api/report/${token}`);
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -15,9 +13,10 @@ async function getReport(token: string) {
   }
 }
 
-export default async function ReportPage({ params }: { params: { token: string } }) {
-  const report = await getReport(params.token);
+export default async function ReportPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  const report = await getReport(token);
   if (!report) notFound();
 
-  return <ReportClient report={report} token={params.token} />;
+  return <ReportClient report={report} token={token} />;
 }
