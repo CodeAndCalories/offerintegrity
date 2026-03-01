@@ -1,0 +1,11 @@
+{
+  "name": "offerintegrity",
+  "private": true,
+  "workspaces": ["apps/web", "apps/worker"],
+  "scripts": {
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:worker": "cd apps/worker && npm run dev",
+    "build:web": "cd apps/web && npm run build",
+    "build:worker": "cd apps/worker && npm run build"
+  }
+}
