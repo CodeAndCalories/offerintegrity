@@ -1,7 +1,5 @@
-export const runtime = "edge";
 import Link from "next/link";
 import Nav from "@/components/Nav";
-import Image from "next/image";
 
 export default function Home() {
   const pillars = [
@@ -152,16 +150,14 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {reportScreenshots.map((shot) => (
               <div key={shot.src} className="border border-[#2a2a2a] bg-ink overflow-hidden group">
-                <div className="relative aspect-[4/3] bg-[#111] flex items-center justify-center">
-                  <Image
+                <div className="relative aspect-[4/3] bg-[#111] flex items-center justify-center overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={shot.src}
                     alt={shot.alt}
-                    fill
-                    className="object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
-                    onError={() => {}}
+                    className="absolute inset-0 w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
                   />
-                  {/* Fallback placeholder shown via CSS if image fails */}
-                  <div className="absolute inset-0 flex items-center justify-center text-parchment-muted text-xs mono opacity-30 pointer-events-none select-none">
+                  <div className="absolute inset-0 flex items-center justify-center text-parchment-muted text-xs mono opacity-20 pointer-events-none select-none">
                     {shot.caption}
                   </div>
                 </div>
