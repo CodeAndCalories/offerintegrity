@@ -33,11 +33,11 @@ export default function Home() {
     },
   ];
 
-  // TODO: Replace /public/report-example-1.png, -2.png, -3.png with real report screenshots
+  // TODO: Replace /public/preview-1.png, -2.png, -3.png with real report screenshots
   const reportScreenshots = [
-    { src: "/report-example-1.png", alt: "Report overview — score and verdict section", caption: "Overall score & verdict" },
-    { src: "/report-example-2.png", alt: "Pillar-by-pillar breakdown", caption: "Pillar breakdown" },
-    { src: "/report-example-3.png", alt: "30-day action plan section", caption: "30-day action plan" },
+    { src: "/preview-1.png", alt: "Report overview — score and verdict section", caption: "Overall score & verdict" },
+    { src: "/preview-2.png", alt: "Pillar-by-pillar breakdown", caption: "Pillar breakdown" },
+    { src: "/preview-3.png", alt: "30-day action plan section", caption: "30-day action plan" },
   ];
 
   return (
