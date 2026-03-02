@@ -55,7 +55,7 @@ export default function Home() {
         <div className="mt-16 pt-16 border-t border-[#1a1a1a]">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div>
-              <p className="mono text-4xl text-gold">\$149</p>
+              <p className="mono text-4xl text-gold">$149</p>
               <p className="text-xs text-parchment-muted mt-1 tracking-wide">One-time. Instant report.</p>
             </div>
             <div className="h-px w-px hidden sm:block bg-[#2a2a2a] self-stretch" />
@@ -160,7 +160,7 @@ export default function Home() {
         <div className="max-w-2xl mx-auto text-center">
           <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-6">One-Time Investment</p>
           <h2 className="text-4xl font-light mb-4">
-            \$149 for clarity
+            $149 for clarity
             <br />
             <em className="text-parchment-dim not-italic text-3xl">before you spend months selling</em>
           </h2>
@@ -171,7 +171,7 @@ export default function Home() {
             href="/start"
             className="inline-flex items-center gap-3 bg-gold text-ink px-10 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
           >
-            Validate My Offer — \$149
+            Validate My Offer — $149
           </Link>
         </div>
       </section>
