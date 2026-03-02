@@ -6,9 +6,19 @@ import { sendReportEmail } from "./email";
 import { handleResend } from "./resend";
 import { handleUpload } from "./upload";
 
-function cors(origin?: string | null): HeadersInit {
+function cors(origin?: string | null, appUrl?: string): HeadersInit {
+  // In production, only reflect the configured APP_URL as allowed origin.
+  // In dev (no appUrl or localhost request), fall back to wildcard.
+  const isLocalhost =
+    !origin ||
+    origin.startsWith("http://localhost") ||
+    origin.startsWith("http://127.0.0.1");
+  const allowOrigin =
+    appUrl && !isLocalhost
+      ? (origin === appUrl ? origin : appUrl)
+      : (origin || "*");
   return {
-    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
@@ -111,9 +121,17 @@ export default {
     const ip = getClientIP(request);
     const origin = request.headers.get("Origin");
 
+    // Scoped helpers that use the correct APP_URL for CORS on every response
+    const jsonR = (data: unknown, status = 200, extraHeaders: HeadersInit = {}): Response =>
+      new Response(JSON.stringify(data), {
+        status,
+        headers: { "Content-Type": "application/json", ...cors(origin, env.APP_URL), ...extraHeaders },
+      });
+    const errR = (message: string, status = 400): Response => jsonR({ error: message }, status);
+
     // CORS preflight
     if (method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors(origin) });
+      return new Response(null, { status: 204, headers: cors(origin, env.APP_URL) });
     }
 
     // POST /api/resend
@@ -124,7 +142,7 @@ export default {
     // POST /api/create-checkout
     if (method === "POST" && path === "/api/create-checkout") {
       const rl = await checkRateLimit(env.OFFER_KV, `checkout:${ip}`, 10);
-      if (!rl.allowed) return err("Rate limit exceeded. Try again in an hour.", 429);
+      if (!rl.allowed) return errR("Rate limit exceeded. Try again in an hour.", 429);
 
       let body: {
         intake: IntakeData;
@@ -135,18 +153,18 @@ export default {
       try {
         body = await request.json();
       } catch {
-        return err("Invalid JSON");
+        return errR("Invalid JSON");
       }
 
       const { intake, email, turnstileToken, uploadedFileKeys = [] } = body;
-      if (!email || !email.includes("@")) return err("Valid email required");
-      if (!turnstileToken) return err("Turnstile token required");
+      if (!email || !email.includes("@")) return errR("Valid email required");
+      if (!turnstileToken) return errR("Turnstile token required");
 
       const turnstileValid = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET_KEY, ip);
-      if (!turnstileValid) return err("Bot verification failed", 403);
+      if (!turnstileValid) return errR("Bot verification failed", 403);
 
       const validationError = validateIntake(intake);
-      if (validationError) return err(validationError);
+      if (validationError) return errR(validationError);
 
       const reportToken = generateToken();
 
@@ -202,27 +220,27 @@ export default {
         expirationTtl: 60 * 60 * 24 * 7,
       });
 
-      return json({ checkoutUrl: session.url, reportToken });
+      return jsonR({ checkoutUrl: session.url, reportToken });
     }
 
     // GET /api/complete?session_id=...
     if (method === "GET" && path === "/api/complete") {
       const sessionId = url.searchParams.get("session_id");
-      if (!sessionId) return err("session_id required");
+      if (!sessionId) return errR("session_id required");
 
       const rl = await checkRateLimit(env.OFFER_KV, `complete:${ip}`, 10);
-      if (!rl.allowed) return err("Rate limit exceeded", 429);
+      if (!rl.allowed) return errR("Rate limit exceeded", 429);
 
       const reportToken = await env.OFFER_KV.get(`session:${sessionId}`);
-      if (!reportToken) return err("Session not found", 404);
+      if (!reportToken) return errR("Session not found", 404);
 
       const raw = await env.OFFER_KV.get(`report:${reportToken}`);
-      if (!raw) return err("Report record not found", 404);
+      if (!raw) return errR("Report record not found", 404);
 
       const record = JSON.parse(raw) as KVRecord;
 
       if (record.generated && record.reportJson) {
-        return json({ reportToken, cached: true });
+        return jsonR({ reportToken, cached: true });
       }
 
       const stripe = await import("stripe");
@@ -232,7 +250,7 @@ export default {
 
       const session = await stripeClient.checkout.sessions.retrieve(sessionId);
       if (session.payment_status !== "paid") {
-        return err("Payment not completed", 402);
+        return errR("Payment not completed", 402);
       }
 
       record.paid = true;
@@ -264,7 +282,7 @@ export default {
         })
       );
 
-      return json({ reportToken });
+      return jsonR({ reportToken });
     }
 
     // GET /api/report/:token
@@ -272,14 +290,14 @@ export default {
       const token = path.split("/")[3];
 
       const rl = await checkRateLimit(env.OFFER_KV, `fetch:${token}`, 60);
-      if (!rl.allowed) return err("Rate limit exceeded", 429);
+      if (!rl.allowed) return errR("Rate limit exceeded", 429);
 
       const raw = await env.OFFER_KV.get(`report:${token}`);
-      if (!raw) return err("Report not found", 404);
+      if (!raw) return errR("Report not found", 404);
 
       const record = JSON.parse(raw) as KVRecord;
       if (!record.paid || !record.generated || !record.reportJson) {
-        return err("Report not ready", 404);
+        return errR("Report not ready", 404);
       }
 
       record.usageCount = (record.usageCount || 0) + 1;
@@ -287,7 +305,7 @@ export default {
         expirationTtl: 60 * 60 * 24 * 90,
       });
 
-      return json(record.reportJson);
+      return jsonR(record.reportJson);
     }
 
     // GET /api/report/:token/pdf
@@ -295,14 +313,14 @@ export default {
       const token = path.split("/")[3];
 
       const rl = await checkRateLimit(env.OFFER_KV, `pdf:${token}`, 20);
-      if (!rl.allowed) return err("Rate limit exceeded", 429);
+      if (!rl.allowed) return errR("Rate limit exceeded", 429);
 
       const raw = await env.OFFER_KV.get(`report:${token}`);
-      if (!raw) return err("Report not found", 404);
+      if (!raw) return errR("Report not found", 404);
 
       const record = JSON.parse(raw) as KVRecord;
       if (!record.paid || !record.generated || !record.reportJson) {
-        return err("Report not ready", 404);
+        return errR("Report not ready", 404);
       }
 
       const pdfBytes = generatePDF(record.reportJson);
@@ -312,7 +330,7 @@ export default {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="offer-integrity-${safeName}.pdf"`,
-          ...cors(),
+          ...cors(origin, env.APP_URL),
         },
       });
     }
@@ -327,9 +345,7 @@ if (method === "OPTIONS" && path === "/api/upload") {
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": env.APP_URL ?? "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      ...cors(origin, env.APP_URL),
     },
   });
 }
@@ -348,7 +364,7 @@ if (method === "OPTIONS" && path === "/api/upload") {
       try {
         event = await stripeClient.webhooks.constructEventAsync(body, sig, env.STRIPE_WEBHOOK_SECRET);
       } catch (e: any) {
-        return err(`Webhook signature verification failed: ${e.message}`, 400);
+        return errR(`Webhook signature verification failed: ${e.message}`, 400);
       }
 
       if (event.type === "checkout.session.completed") {
@@ -370,33 +386,33 @@ if (method === "OPTIONS" && path === "/api/upload") {
         }
       }
 
-      return json({ received: true });
+      return jsonR({ received: true });
     }
 
     // POST /api/upload — optional file uploads (included in $149)
     if (method === "POST" && path === "/api/upload") {
       if (!env.OFFER_R2) {
         console.error("OFFER_R2 binding not configured — cannot accept file uploads");
-        return err("File upload is not configured. Contact support.", 503);
+        return errR("File upload is not configured. Contact support.", 503);
       }
 
       const rl = await checkRateLimit(env.OFFER_KV, `upload:${ip}`, 5);
-      if (!rl.allowed) return err("Rate limit exceeded for uploads. Try again later.", 429);
+      if (!rl.allowed) return errR("Rate limit exceeded for uploads. Try again later.", 429);
 
       let formData: FormData;
       try {
         formData = await request.formData();
       } catch {
-        return err("Invalid form data");
+        return errR("Invalid form data");
       }
 
       const turnstileToken = formData.get("turnstileToken");
-      if (!turnstileToken || typeof turnstileToken !== "string") return err("Turnstile token required");
+      if (!turnstileToken || typeof turnstileToken !== "string") return errR("Turnstile token required");
       const turnstileValid = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET_KEY, ip);
-      if (!turnstileValid) return err("Bot verification failed", 403);
+      if (!turnstileValid) return errR("Bot verification failed", 403);
 
       const fileEntries = formData.getAll("files") as unknown as File[];
-      if (!fileEntries.length) return json({ keys: [] });
+      if (!fileEntries.length) return jsonR({ keys: [] });
 
       const MAX_FILES = 3;
       const MAX_TOTAL_BYTES = 10 * 1024 * 1024;
@@ -407,17 +423,17 @@ if (method === "OPTIONS" && path === "/api/upload") {
       ]);
       const ALLOWED_EXTS = new Set(["pdf", "png", "jpg", "jpeg"]);
 
-      if (fileEntries.length > MAX_FILES) return err(`Maximum ${MAX_FILES} files allowed`);
+      if (fileEntries.length > MAX_FILES) return errR(`Maximum ${MAX_FILES} files allowed`);
 
       let totalBytes = 0;
       for (const file of fileEntries) {
         const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
         if (!ALLOWED_EXTS.has(ext) && !ALLOWED_TYPES.has(file.type)) {
-          return err(`File type not allowed: ${file.name}. Accepted: PDF, PNG, JPG.`);
+          return errR(`File type not allowed: ${file.name}. Accepted: PDF, PNG, JPG.`);
         }
         totalBytes += file.size;
       }
-      if (totalBytes > MAX_TOTAL_BYTES) return err("Total file size exceeds 10MB");
+      if (totalBytes > MAX_TOTAL_BYTES) return errR("Total file size exceeds 10MB");
 
       const uploadedKeys: string[] = [];
       const uploadId = generateToken();
@@ -444,10 +460,10 @@ if (method === "OPTIONS" && path === "/api/upload") {
         uploadedKeys.push(key);
       }
 
-      return json({ keys: uploadedKeys });
+      return jsonR({ keys: uploadedKeys });
     }
 
-    return err("Not found", 404);
+    return errR("Not found", 404);
   },
 
   // Cron trigger — runs daily, deletes R2 uploads older than 7 days

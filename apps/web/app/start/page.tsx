@@ -230,7 +230,18 @@ export default function StartPage() {
       let uploadedKeys: string[] = [];
 
       if (uploadFiles.length > 0) {
-        const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL || "http://localhost:8787";
+        const WORKER_URL = (() => {
+          const url = process.env.NEXT_PUBLIC_WORKER_URL;
+          if (!url) {
+            if (process.env.NODE_ENV === "production") {
+              throw new Error(
+                "Configuration error: NEXT_PUBLIC_WORKER_URL is not set. Contact support."
+              );
+            }
+            return "http://localhost:8787";
+          }
+          return url;
+        })();
         const formData = new FormData();
         formData.append("turnstileToken", turnstileToken || "dev-bypass");
         for (const file of uploadFiles) {
