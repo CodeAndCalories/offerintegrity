@@ -69,7 +69,7 @@ export default function HowItWorks() {
           <div className="space-y-0">
             {[
               { step: "01", title: "Complete the Assessment", desc: "A 7-step structured intake form covering your offer, buyer, problem, proof, delivery, and launch plan. Takes 10–15 minutes." },
-              { step: "02", title: "Secure Payment", desc: "One-time $49 payment via Stripe. Your intake data is held securely until payment is confirmed." },
+              { step: "02", title: "Secure Payment", desc: "One-time $149 payment via Stripe. Your intake data is held securely until payment is confirmed." },
               { step: "03", title: "Report Generated", desc: "Our AI analyzes your intake across all 7 pillars and produces a structured JSON report. This happens once, then is stored." },
               { step: "04", title: "Instant Access", desc: "View your report immediately after payment. No waiting. The report is also emailed to you with a permanent link and PDF." },
             ].map((item, i) => (
@@ -110,7 +110,7 @@ export default function HowItWorks() {
             href="/start"
             className="inline-flex items-center gap-3 bg-gold text-ink px-10 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
           >
-            Start Your Validation — $49
+            Start Your Validation — $149
           </Link>
         </div>
       </div>
