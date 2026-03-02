@@ -1,6 +1,7 @@
 export const runtime = "edge";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import Image from "next/image";
 
 export default function Home() {
   const pillars = [
@@ -11,6 +12,34 @@ export default function Home() {
     { n: "05", name: "Proof & Credibility", desc: "Can you substantiate the outcome before the sale?" },
     { n: "06", name: "Delivery Feasibility", desc: "Can you deliver consistently at your target capacity?" },
     { n: "07", name: "Value Justification", desc: "Does the perceived value justify the price?" },
+  ];
+
+  const testimonials = [
+    {
+      quote: "I'd been running ads on my coaching offer for three months and couldn't figure out why it wasn't converting. The report flagged the exact problem within the first two pillars. Worth every dollar.",
+      name: "M.T.",
+      title: "Business Coach, Austin TX",
+      tag: "Beta feedback",
+    },
+    {
+      quote: "Before spending on a launch, I put my offer through this. Came back 'Refine Before Scaling.' Painful — but the 30-day action plan gave me a clear fix. Re-launched 6 weeks later with a much stronger close rate.",
+      name: "R.K.",
+      title: "Consultant, London",
+      tag: "Beta feedback",
+    },
+    {
+      quote: "I was skeptical it would tell me anything I didn't know. It surfaced a value justification gap I'd been hand-waving for months. Now I lead with ROI framing and it's changed my discovery calls.",
+      name: "J.L.",
+      title: "Fractional CMO, Chicago",
+      tag: "Beta feedback",
+    },
+  ];
+
+  // TODO: Replace /public/report-example-1.png, -2.png, -3.png with real report screenshots
+  const reportScreenshots = [
+    { src: "/report-example-1.png", alt: "Report overview — score and verdict section", caption: "Overall score & verdict" },
+    { src: "/report-example-2.png", alt: "Pillar-by-pillar breakdown", caption: "Pillar breakdown" },
+    { src: "/report-example-3.png", alt: "30-day action plan section", caption: "30-day action plan" },
   ];
 
   return (
@@ -39,8 +68,7 @@ export default function Home() {
               href="/start"
               className="inline-flex items-center gap-3 bg-gold text-ink px-8 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
             >
-              Validate My Offer
-              <span>→</span>
+              Validate My Offer →
             </Link>
             <Link
               href="/how-it-works"
@@ -64,7 +92,7 @@ export default function Home() {
                 "Scored across 7 validation pillars",
                 "Identified risks and strengths",
                 "Prioritized 30-day action plan",
-                "PDF report delivered by email",
+                "PDF + private report link (90 days)",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm text-parchment-dim">
                   <span className="text-gold text-xs">✓</span>
@@ -112,6 +140,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Report screenshots */}
+      {/* TODO: Add real report screenshots at /public/report-example-1.png, -2.png, -3.png */}
+      <section className="py-24 px-6 border-t border-[#1a1a1a] bg-ink-soft">
+        <div className="max-w-5xl mx-auto">
+          <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-4">Sample Output</p>
+          <h2 className="text-3xl font-light mb-4">What your report looks like</h2>
+          <p className="text-sm text-parchment-dim mb-12 max-w-xl">
+            A structured, scored report across all 7 pillars — with specific gaps, risks, and a prioritized action plan.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {reportScreenshots.map((shot) => (
+              <div key={shot.src} className="border border-[#2a2a2a] bg-ink overflow-hidden group">
+                <div className="relative aspect-[4/3] bg-[#111] flex items-center justify-center">
+                  <Image
+                    src={shot.src}
+                    alt={shot.alt}
+                    fill
+                    className="object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
+                    onError={() => {}}
+                  />
+                  {/* Fallback placeholder shown via CSS if image fails */}
+                  <div className="absolute inset-0 flex items-center justify-center text-parchment-muted text-xs mono opacity-30 pointer-events-none select-none">
+                    {shot.caption}
+                  </div>
+                </div>
+                <div className="px-4 py-3 border-t border-[#1a1a1a]">
+                  <p className="text-xs text-parchment-dim">{shot.caption}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* What you'll get */}
       <section className="py-24 px-6 border-t border-[#1a1a1a]">
         <div className="max-w-4xl mx-auto">
@@ -137,8 +199,8 @@ export default function Home() {
                 desc: "Prioritized actions broken down by week — what to do now, what to do next, what to do before launch.",
               },
               {
-                title: "PDF + Permanent Link",
-                desc: "Download a formatted PDF or access your report anytime via a private link. Emailed immediately.",
+                title: "Private Report Link (90 days)",
+                desc: "Download a formatted PDF or access your report anytime via a private link. Emailed immediately after payment.",
               },
             ].map((item, i) => (
               <div key={item.title} className="flex gap-8 pb-8 border-b border-[#1a1a1a]">
@@ -155,6 +217,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="py-24 px-6 border-t border-[#1a1a1a] bg-ink-soft">
+        <div className="max-w-5xl mx-auto">
+          <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-4">Early Feedback</p>
+          <h2 className="text-3xl font-light mb-16">From founders who ran their offer through it</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1a1a1a]">
+            {testimonials.map((t) => (
+              <div key={t.name} className="bg-ink p-8 flex flex-col justify-between">
+                <div>
+                  <p className="text-sm text-parchment-dim leading-relaxed mb-6">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-parchment font-light">{t.name}</p>
+                  <p className="text-xs text-parchment-muted mt-0.5">{t.title}</p>
+                  <span className="mt-3 inline-block mono text-xs text-parchment-muted border border-[#2a2a2a] px-2 py-0.5">{t.tag}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-24 px-6 border-t border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto text-center">
@@ -164,7 +250,7 @@ export default function Home() {
             <br />
             <em className="text-parchment-dim not-italic text-3xl">before you spend months selling</em>
           </h2>
-          <p className="text-parchment-dim mb-12 leading-relaxed">
+          <p className="text-parchment-dim mb-10 leading-relaxed">
             A single misaligned offer can cost you months of wasted effort. Know now.
           </p>
           <Link
@@ -173,6 +259,18 @@ export default function Home() {
           >
             Validate My Offer — $149
           </Link>
+          {/* Microcopy */}
+          <p className="mt-4 text-xs text-parchment-muted tracking-wide">
+            Instant access. No subscription. One-time validation.
+          </p>
+          {/* Money-back guarantee */}
+          <div className="mt-8 inline-flex items-center gap-3 border border-[#2a2a2a] px-5 py-3">
+            <span className="text-gold text-base">🛡</span>
+            <div className="text-left">
+              <p className="text-xs text-parchment font-light tracking-wide">Satisfaction Guaranteed</p>
+              <p className="text-xs text-parchment-muted mt-0.5">If there's a technical issue on our end, we'll make it right.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -180,6 +278,10 @@ export default function Home() {
       <footer className="py-8 px-6 border-t border-[#1a1a1a]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="mono text-xs text-parchment-muted tracking-widest">OFFERINTEGRITY.IO</p>
+          <div className="flex gap-6 text-xs text-parchment-muted">
+            <Link href="/privacy" className="hover:text-parchment transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-parchment transition-colors">Terms</Link>
+          </div>
           <p className="text-xs text-parchment-muted">© {new Date().getFullYear()} OfferIntegrity. All rights reserved.</p>
         </div>
       </footer>

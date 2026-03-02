@@ -8,17 +8,25 @@ binding = "OFFER_KV"
 id = "d22cbdcb8e6445b5b8dde2779924e63a"
 preview_id = "8d337dd144244fb5ae65f639ff7b04b4"
 
+# R2 bucket for optional file uploads (included in $149 price)
+# Create with: wrangler r2 bucket create offerintegrity-uploads
+[[r2_buckets]]
+binding = "OFFER_R2"
+bucket_name = "offerintegrity-uploads"
+
+# Cron trigger: runs daily at 03:00 UTC to delete R2 uploads older than 7 days
+[[triggers]]
+crons = ["0 3 * * *"]
+
 [vars]
 USE_REAL_AI = "false"
 WORKER_URL = "https://api.offerintegrity.io"
 APP_URL = "https://offerintegrity.io"
 
-# Secrets (set via wrangler secret put):
+# ── Secrets (set via `wrangler secret put <NAME>`) ────────────────────────────
 # STRIPE_SECRET_KEY
 # STRIPE_WEBHOOK_SECRET
 # RESEND_API_KEY
-# OPENAI_API_KEY (optional, only if USE_REAL_AI=true)
-# TURNSTILE_SECRET_KEY
-[[r2_buckets]]
-binding = "OFFER_R2"
-bucket_name = "offerintegrity-uploads"
+# OPENAI_API_KEY          (only needed when USE_REAL_AI=true)
+# TURNSTILE_SECRET_KEY    (real Cloudflare Turnstile secret key — NOT the test key)
+# PRICE_ID                (optional: your Stripe Price ID for $149; omit to use price_data fallback)

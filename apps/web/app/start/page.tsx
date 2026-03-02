@@ -22,10 +22,11 @@ type Step = {
   title: string;
   subtitle: string;
   fields: Field[];
+  isUpload?: boolean;
   isLast?: boolean;
 };
 
-const STEPS: Step[] = [
+const INTAKE_STEPS: Step[] = [
   {
     id: 1,
     title: "Offer Basics",
@@ -92,6 +93,13 @@ const STEPS: Step[] = [
   },
   {
     id: 7,
+    title: "Supporting Files",
+    subtitle: "Optional: upload assets for a richer analysis",
+    fields: [],
+    isUpload: true,
+  },
+  {
+    id: 8,
     title: "Your Details",
     subtitle: "Where should we send your report?",
     fields: [
@@ -101,8 +109,14 @@ const STEPS: Step[] = [
   },
 ];
 
+const ALLOWED_UPLOAD_TYPES = ["application/pdf", "image/png", "image/jpeg"];
+const ALLOWED_UPLOAD_EXT = [".pdf", ".png", ".jpg", ".jpeg"];
+const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_FILES = 3;
+
 export default function StartPage() {
   const router = useRouter();
+
   const [step, setStep] = useState(1);
   const [data, setData] = useState<IntakeData>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -111,9 +125,11 @@ export default function StartPage() {
   const [consent, setConsent] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [uploadError, setUploadError] = useState("");
 
-  const currentStep = STEPS[step - 1];
-  const totalSteps = STEPS.length;
+  const totalSteps = INTAKE_STEPS.length;
+  const currentStep = INTAKE_STEPS[step - 1];
 
   function handleChange(key: string, value: string) {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -127,7 +143,7 @@ export default function StartPage() {
         newErrors[field.key] = "This field is required";
       }
     }
-    if (step === totalSteps) {
+    if (currentStep.isLast) {
       if (!consent) newErrors.consent = "You must agree to proceed";
     }
     setErrors(newErrors);
@@ -149,6 +165,59 @@ export default function StartPage() {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setUploadError("");
+    const incoming = Array.from(e.target.files || []);
+    const combined = [...uploadFiles];
+    for (const f of incoming) {
+      if (combined.length >= MAX_FILES) {
+        setUploadError(`Maximum ${MAX_FILES} files allowed.`);
+        break;
+      }
+      const ext = "." + f.name.split(".").pop()?.toLowerCase();
+      if (!ALLOWED_UPLOAD_EXT.includes(ext) && !ALLOWED_UPLOAD_TYPES.includes(f.type)) {
+        setUploadError(`File type not allowed: ${f.name}. Accepted: PDF, PNG, JPG.`);
+        e.target.value = "";
+        return;
+      }
+      if (f.size > MAX_TOTAL_BYTES) {
+        setUploadError(`File too large: ${f.name}. Max 10MB per upload.`);
+        e.target.value = "";
+        return;
+      }
+      combined.push(f);
+    }
+    const totalBytes = combined.reduce((s, f) => s + f.size, 0);
+    if (totalBytes > MAX_TOTAL_BYTES) {
+      setUploadError("Total file size exceeds 10MB limit.");
+      e.target.value = "";
+      return;
+    }
+    setUploadFiles(combined);
+    e.target.value = "";
+  }
+
+  function removeFile(idx: number) {
+    setUploadFiles((prev) => prev.filter((_, i) => i !== idx));
+    setUploadError("");
+  }
+
+  const initTurnstile = () => {
+    if (typeof window !== "undefined" && (window as any).turnstile && turnstileRef.current) {
+      if (!turnstileToken && turnstileRef.current.children.length === 0) {
+        (window as any).turnstile.render(turnstileRef.current, {
+          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+          callback: (token: string) => setTurnstileToken(token),
+          theme: "dark",
+        });
+      }
+    }
+  };
+
+  if (currentStep.isLast) {
+    setTimeout(initTurnstile, 100);
+  }
+
   async function handleSubmit() {
     if (!validateStep()) return;
     if (!turnstileToken && process.env.NODE_ENV !== "development") {
@@ -158,10 +227,32 @@ export default function StartPage() {
     setLoading(true);
     setGlobalError("");
     try {
+      let uploadedKeys: string[] = [];
+
+      if (uploadFiles.length > 0) {
+        const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL || "http://localhost:8787";
+        const formData = new FormData();
+        formData.append("turnstileToken", turnstileToken || "dev-bypass");
+        for (const file of uploadFiles) {
+          formData.append("files", file);
+        }
+        const upRes = await fetch(`${WORKER_URL}/api/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!upRes.ok) {
+          const upErr = await upRes.json() as { error: string };
+          throw new Error(upErr.error || "File upload failed");
+        }
+        const upData = await upRes.json() as { keys: string[] };
+        uploadedKeys = upData.keys;
+      }
+
       const { checkoutUrl } = await createCheckout({
         intake: data,
         email: data.email,
         turnstileToken: turnstileToken || "dev-bypass",
+        uploadedFileKeys: uploadedKeys,
       });
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
@@ -171,26 +262,11 @@ export default function StartPage() {
     }
   }
 
-  const initTurnstile = () => {
-    if (typeof window !== "undefined" && (window as any).turnstile && turnstileRef.current) {
-      if (!turnstileToken && turnstileRef.current.children.length === 0) {
-        (window as any).turnstile.render(turnstileRef.current, {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
-          callback: (token: string) => setTurnstileToken(token),
-          theme: "dark",
-        });
-      }
-    }
-  };
-
-  if (step === totalSteps) {
-    setTimeout(initTurnstile, 100);
-  }
-
   return (
     <main className="min-h-screen bg-ink text-parchment">
       <Nav />
       <div className="pt-24 pb-16 px-6 max-w-2xl mx-auto">
+
         {/* Progress */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-3">
@@ -201,7 +277,7 @@ export default function StartPage() {
             <div className="absolute top-0 left-0 h-full bg-gold transition-all duration-500" style={{ width: `${(step / totalSteps) * 100}%` }} />
           </div>
           <div className="flex justify-between mt-3">
-            {STEPS.map((s) => (
+            {INTAKE_STEPS.map((s) => (
               <div key={s.id} className={`h-1.5 w-1.5 rounded-full transition-colors ${s.id < step ? "bg-gold" : s.id === step ? "bg-gold-light" : "bg-[#2a2a2a]"}`} />
             ))}
           </div>
@@ -213,13 +289,13 @@ export default function StartPage() {
           <h1 className="text-3xl font-light mb-10">{currentStep.title}</h1>
 
           <div className="space-y-8">
+            {/* Regular fields */}
             {currentStep.fields.map((field) => (
               <div key={field.key}>
                 <label className="block text-sm text-parchment-dim mb-2 tracking-wide">
                   {field.label}
                   {field.required && <span className="text-gold ml-1">*</span>}
                 </label>
-
                 {field.type === "select" ? (
                   <select
                     value={data[field.key] || ""}
@@ -227,9 +303,7 @@ export default function StartPage() {
                     className="w-full bg-ink-soft border border-[#2a2a2a] text-parchment px-4 py-3 text-sm focus:outline-none focus:border-gold transition-colors appearance-none"
                   >
                     <option value="">Select…</option>
-                    {field.options?.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
+                    {field.options?.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 ) : field.type === "textarea" ? (
                   <div>
@@ -256,13 +330,74 @@ export default function StartPage() {
                     className="w-full bg-ink-soft border border-[#2a2a2a] text-parchment px-4 py-3 text-sm focus:outline-none focus:border-gold transition-colors"
                   />
                 )}
-
-                {errors[field.key] && (
-                  <p className="text-xs text-red-400 mt-1">{errors[field.key]}</p>
-                )}
+                {errors[field.key] && <p className="text-xs text-red-400 mt-1">{errors[field.key]}</p>}
               </div>
             ))}
 
+            {/* Step 7: Upload step */}
+            {currentStep.isUpload && (
+              <div className="space-y-6">
+                <div className="border border-[#2a2a2a] bg-ink-soft p-6">
+                  <p className="mono text-xs text-gold tracking-[0.2em] uppercase mb-3">Included with your $149 report</p>
+                  <p className="text-sm text-parchment-dim leading-relaxed mb-6">
+                    You can optionally upload up to {MAX_FILES} supporting files — sales decks, case studies, landing page screenshots, or testimonials. These are used to enrich your analysis and are <strong className="text-parchment font-normal">automatically deleted after 7 days</strong>.
+                  </p>
+                  <p className="text-xs text-parchment-muted mb-4">
+                    Accepted: PDF, PNG, JPG &nbsp;·&nbsp; Max {MAX_FILES} files &nbsp;·&nbsp; 10MB total
+                  </p>
+
+                  <label className="block">
+                    <div className="border border-dashed border-[#3a3a3a] hover:border-gold transition-colors cursor-pointer p-6 text-center">
+                      <p className="text-sm text-parchment-muted">
+                        <span className="text-gold">Choose files</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-parchment-muted mt-1">PDF, PNG, JPG up to 10MB total</p>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        disabled={uploadFiles.length >= MAX_FILES}
+                      />
+                    </div>
+                  </label>
+
+                  {uploadFiles.length > 0 && (
+                    <ul className="mt-4 space-y-2">
+                      {uploadFiles.map((f, idx) => (
+                        <li key={f.name + idx} className="flex items-center justify-between text-xs text-parchment-dim bg-ink p-3 border border-[#2a2a2a]">
+                          <span className="flex items-center gap-2">
+                            <span className="text-gold">↳</span>
+                            {f.name}
+                            <span className="text-parchment-muted">({(f.size / 1024).toFixed(0)}KB)</span>
+                          </span>
+                          <button
+                            onClick={() => removeFile(idx)}
+                            className="text-parchment-muted hover:text-red-400 transition-colors ml-4 shrink-0"
+                            aria-label="Remove file"
+                          >
+                            ✕
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {uploadError && <p className="text-xs text-red-400 mt-3">{uploadError}</p>}
+
+                  {uploadFiles.length >= MAX_FILES && (
+                    <p className="text-xs text-parchment-muted mt-3 italic">Maximum {MAX_FILES} files selected.</p>
+                  )}
+                </div>
+
+                <p className="text-xs text-parchment-muted italic">
+                  Skip this step if you don't have supporting files — your report will be generated from your intake answers alone.
+                </p>
+              </div>
+            )}
+
+            {/* Final step: consent + turnstile */}
             {currentStep.isLast && (
               <>
                 <div>
@@ -301,7 +436,7 @@ export default function StartPage() {
 
             {step < totalSteps ? (
               <button onClick={handleNext} className="bg-gold text-ink px-8 py-3 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors">
-                Continue →
+                {currentStep.isUpload ? (uploadFiles.length > 0 ? `Continue with ${uploadFiles.length} file${uploadFiles.length > 1 ? "s" : ""} →` : "Skip & Continue →") : "Continue →"}
               </button>
             ) : (
               <button
@@ -332,7 +467,8 @@ export default function StartPage() {
           <div className="flex flex-wrap gap-6 text-xs text-parchment-muted">
             <span>🔒 Stripe Checkout — PCI Compliant</span>
             <span>📄 Report generated immediately after payment</span>
-            <span>✉️ Emailed to you with permanent link</span>
+            <span>✉️ Private report link (available for 90 days)</span>
+            <span>🗑️ Uploaded supporting files deleted after 7 days</span>
           </div>
         </div>
       </div>

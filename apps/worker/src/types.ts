@@ -1,5 +1,6 @@
 export interface Env {
   OFFER_KV: KVNamespace;
+  OFFER_R2?: R2Bucket;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
@@ -8,34 +9,29 @@ export interface Env {
   USE_REAL_AI: string;
   WORKER_URL: string;
   APP_URL: string;
+  PRICE_ID?: string; // Optional Stripe Price ID for $149; falls back to price_data if not set
 }
 
 export interface IntakeData {
-  // Step 1
   offerName: string;
   price: string;
   offerType: string;
   deliveryFormat: string;
   durationWeeks: string;
-  // Step 2
   icpRole: string;
   icpStage: string;
   icpIncomeOrBudgetRange: string;
   buyerAuthority: string;
-  // Step 3
   problemStatement: string;
   costOfInaction: string;
   desiredOutcome: string;
   timeToOutcome: string;
-  // Step 4
   uniqueMechanism: string;
   mainAlternatives: string;
   proofAssets: string;
-  // Step 5
   weeklyTimeRequiredFromYou: string;
   capacityPerMonth: string;
   keyDependencies: string;
-  // Step 6
   primaryAcquisitionChannel: string;
   expectedSalesCycle: string;
   currentAudienceSize: string;
@@ -50,6 +46,7 @@ export interface KVRecord {
   generated: boolean;
   usageCount: number;
   stripeSessionId: string;
+  uploadedFileKeys?: string[]; // R2 object keys for optional uploaded files
 }
 
 export interface ReportJson {
@@ -71,6 +68,10 @@ export interface ReportJson {
     next7Days: string[];
     next14Days: string[];
     next30Days: string[];
+  };
+  supportingAssets?: {
+    filesReviewed: string[];
+    heuristicFlags: string[];
   };
 }
 
