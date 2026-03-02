@@ -315,7 +315,7 @@ export default function StartPage() {
                     Processing…
                   </>
                 ) : (
-                  "Proceed to Payment — $49"
+                  "Proceed to Payment — $149"
                 )}
               </button>
             )}
