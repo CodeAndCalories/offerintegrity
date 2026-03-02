@@ -4,6 +4,7 @@ import { generateReport } from "./reportGenerator";
 import { generatePDF } from "./pdfGenerator";
 import { sendReportEmail } from "./email";
 import { handleResend } from "./resend";
+import { handleUpload } from "./upload";
 
 function cors(origin?: string | null): HeadersInit {
   return {
@@ -273,6 +274,23 @@ export default {
       });
     }
 
+// POST /api/upload
+if (method === "POST" && path === "/api/upload") {
+  return handleUpload(request, env);
+}
+
+// OPTIONS /api/upload (CORS preflight)
+if (method === "OPTIONS" && path === "/api/upload") {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": env.APP_URL ?? "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+    
     // POST /api/stripe-webhook
     if (method === "POST" && path === "/api/stripe-webhook") {
       const body = await request.text();
