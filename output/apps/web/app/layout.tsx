@@ -4,7 +4,7 @@ import "./globals.css"; // keep your existing global styles
 const SITE_URL = "https://offerintegrity.io";
 const TITLE = "OfferIntegrity — High-Ticket Offer Validation";
 const DESCRIPTION =
-  "Get a structured 7-pillar validation report for your high-ticket coaching or consulting offer. Know exactly what's working, what's broken, and how to fix it — before you launch.";
+  "Validate your $5K–$50K offer before you scale. A structured 7-pillar audit for high-ticket coaching and consulting — know exactly what to fix before your next launch.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     "consulting offer review",
     "offer positioning",
     "sales conversion audit",
+    "high ticket sales conversion",
+    "validate offer before scaling",
   ],
   authors: [{ name: "OfferIntegrity" }],
   creator: "OfferIntegrity",
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "OfferIntegrity — High-Ticket Offer Validation",
+        alt: "OfferIntegrity — Validate Your High-Ticket Offer Before You Scale",
       },
     ],
   },

@@ -1,105 +1,262 @@
-# OfferIntegrity — Release Notes
-
-## Summary of Changes
-
-### 1. Icons & Favicons (`apps/web/app/`)
-- `favicon.ico` — multi-size (16/32/48px) generated from `icon.svg`
-- `icon.png` — 32×32 PNG for browser tab
-- `apple-icon.png` — 180×180 for iOS homescreen
-- `apps/web/public/og.png` — 1200×630 OpenGraph image
-- `apps/web/public/icon.svg` — source SVG for reference
-
-Next.js App Router auto-discovers `favicon.ico`, `icon.png`, and `apple-icon.png` in the `app/` directory — no `<link>` tags needed.
-
-### 2. Metadata & SEO (`apps/web/app/layout.tsx`)
-- Full `Metadata` object with title template, description, canonical, keywords
-- OpenGraph `og:type`, `og:image`, `og:site_name`
-- Twitter `summary_large_image` card
-- Robots: index + follow
-- Cloudflare Web Analytics snippet injected behind `NEXT_PUBLIC_CF_ANALYTICS_TOKEN` env var
-
-**Replace** your existing `layout.tsx` with `apps/web/app/layout.tsx`.
-
-### 3. Premium Copy (`apps/web/lib/copy.ts`)
-- `HERO`, `HOW_IT_WORKS`, `PILLARS`, `OBJECTIONS` constants
-- Risk-reduction, specificity-first tone — no generic AI language
-- Import into `page.tsx` and `how-it-works/page.tsx` and use in JSX
-
-### 4. Email Polish (`apps/worker/src/email.ts`)
-- Dark premium HTML template (matches brand palette)
-- Plain-text fallback with both report URL and direct PDF URL
-- PDF link uses `${workerUrl}/api/report/${token}/pdf` — always correct
-- `report_token` tag on every send for Resend filtering
-
-**Replace** your existing `email.ts` with this file.
-
-### 5. Resend Report API (`apps/worker/src/resend.ts`)
-- New `POST /api/resend` endpoint
-- Requires `X-Resend-Token` header matching `RESEND_SUPPORT_TOKEN` secret
-- Validates: report exists, is paid + generated, rate limit (5/hour/token)
-- Email override must match stored address — prevents fishing
-- See `apps/worker/src/index.patch.ts` for the 2-line change to your router
-
-### 6. UX Components
-- `WizardProgress.tsx` — step counter + progress bar + dots
-- `FieldError.tsx` + `friendlyErrors` helpers — friendly validation copy
-- `success/page.tsx` — polling with verifying/ready/pending/error states + "what next" explanation
-- `ReportNotFound.tsx` — 404 state with email CTA
-
-### 7. Footer Pages
-- `/privacy` — GDPR-aware, covers Stripe/Resend/OpenAI/Cloudflare processors
-- `/terms` — payment, refunds, accuracy, IP, limitation of liability
-- `Footer.tsx` component — add to your root layout or per-page
-
-### 8. Analytics
-- Zero-overhead: snippet only injected if env var is set
-- Cloudflare Web Analytics is cookieless — no consent banner needed for EU
+# OfferIntegrity — Product Simplification Release
+## Single-Tier $149 · Optional Uploads Included
 
 ---
 
-## Deploy Checklist
+## What changed
 
-### Worker
-- [ ] Copy `apps/worker/src/email.ts` → replace existing
-- [ ] Copy `apps/worker/src/resend.ts` → new file
-- [ ] Edit `apps/worker/src/index.ts`:
-  - Add: `import { handleResend } from "./resend";`
-  - Add route: `if (method === "POST" && path === "/api/resend") return handleResend(request, env);`
-- [ ] `wrangler secret put RESEND_SUPPORT_TOKEN` (generate with `openssl rand -hex 32`)
-- [ ] `cd apps/worker && npm run deploy`
-- [ ] Smoke test: `curl -X POST https://api.offerintegrity.io/api/resend` → should get `401 Unauthorized`
+This release removes all tier logic and consolidates to a single $149 product.
+Uploads are now included in the base price — they are optional and do not affect pricing.
 
-### Web (Cloudflare Pages)
-- [ ] Copy `apps/web/app/favicon.ico`, `icon.png`, `apple-icon.png` → `apps/web/app/`
-- [ ] Copy `apps/web/public/og.png`, `icon.svg` → `apps/web/public/`
-- [ ] Replace `apps/web/app/layout.tsx` with new version
-- [ ] Add new pages: `privacy/page.tsx`, `terms/page.tsx`
-- [ ] Add components: `Footer.tsx`, `WizardProgress.tsx`, `FieldError.tsx`, `ReportNotFound.tsx`
-- [ ] Add lib: `lib/copy.ts`
-- [ ] Replace `app/success/page.tsx` with new version (or merge polling logic)
-- [ ] Update your landing page to import from `lib/copy.ts`
-- [ ] Add `Footer` component to root layout or per-page
-- [ ] Add `ReportNotFound` to `report/[token]/page.tsx` for 404 state
-- [ ] In Cloudflare Pages → Settings → Environment Variables:
-  - `NEXT_PUBLIC_CF_ANALYTICS_TOKEN` = your token (or leave blank to skip analytics)
-- [ ] Trigger re-deploy (git push or manual)
+### Removed / simplified
+- All tier selection UI (`TierSelector`, `deepValidation` flags, tier branching)
+- `PRICE_ID_DEEP` — never referenced
+- Any conditional logic that showed different prices based on upload choice
 
-### Verification
-- [ ] `https://offerintegrity.io` — check favicon in tab, og:image with og:preview tool
-- [ ] `https://offerintegrity.io/privacy` — loads correctly
-- [ ] `https://offerintegrity.io/terms` — loads correctly
-- [ ] Complete a test purchase → success page shows states correctly
-- [ ] Check email delivery — PDF link points to `api.offerintegrity.io/api/report/TOKEN/pdf`
-- [ ] Worker resend test:
-  ```
-  curl -X POST https://api.offerintegrity.io/api/resend \
-    -H "X-Resend-Token: YOUR_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d '{"token":"YOUR_REPORT_TOKEN"}'
-  ```
+### Added / updated
+- Homepage rewrite with premium positioning (`app/page.tsx`)
+- Long-form SEO page at `/high-ticket-offer-validation`
+- `sitemap.ts` + `robots.ts`
+- Updated OG image (1200×630) — new headline
+- Updated `layout.tsx` metadata — refined description and keywords
+- Upload step in wizard (Step 6 of 7) — optional, no price impact
+- Worker `upload.ts` — new `POST /api/upload` endpoint
+- R2 binding (`OFFER_R2`) — stores uploaded files
 
-### No changes needed
-- Stripe webhook routes — untouched
-- KV namespace bindings — no new bindings
-- Turnstile — untouched
-- Worker rate limiting — existing system used for resend too
+---
+
+## File-by-file patch list
+
+### NEW files — copy to your repo
+
+| Source (this zip) | Destination in your repo | Action |
+|---|---|---|
+| `apps/web/app/page.tsx` | `apps/web/app/page.tsx` | **Replace** |
+| `apps/web/app/layout.tsx` | `apps/web/app/layout.tsx` | **Replace** |
+| `apps/web/app/sitemap.ts` | `apps/web/app/sitemap.ts` | **New file** |
+| `apps/web/app/robots.ts` | `apps/web/app/robots.ts` | **New file** |
+| `apps/web/app/start/page.tsx` | `apps/web/app/start/page.tsx` | **Replace** |
+| `apps/web/app/high-ticket-offer-validation/page.tsx` | `apps/web/app/high-ticket-offer-validation/page.tsx` | **New file** |
+| `apps/web/components/FieldError.tsx` | `apps/web/components/FieldError.tsx` | **Replace** |
+| `apps/web/public/og.png` | `apps/web/public/og.png` | **Replace** |
+| `apps/worker/src/upload.ts` | `apps/worker/src/upload.ts` | **New file** |
+| `apps/worker/src/types.ts` | `apps/worker/src/types.ts` | **Replace** (adds `OFFER_R2`) |
+
+### Patch files — read and apply manually
+
+| File | What to do |
+|---|---|
+| `apps/worker/src/index.upload.patch.ts` | Read this file and apply the 4 changes to your `index.ts` |
+| `apps/worker/wrangler.r2.addition.toml` | Append `[[r2_buckets]]` block to your `wrangler.toml` |
+
+### Carry over from previous release (unchanged)
+
+These files from the previous release are still valid and do not need to change:
+
+- `apps/worker/src/email.ts`
+- `apps/worker/src/resend.ts`
+- `apps/web/components/WizardProgress.tsx`
+- `apps/web/components/Footer.tsx`
+- `apps/web/components/ReportNotFound.tsx`
+- `apps/web/app/success/page.tsx`
+- `apps/web/app/privacy/page.tsx`
+- `apps/web/app/terms/page.tsx`
+- All favicon / icon files (`favicon.ico`, `icon.png`, `apple-icon.png`, `icon.svg`)
+
+---
+
+## New environment variables
+
+None required for this release.
+
+R2 access is provided via the `wrangler.toml` binding — not a secret key.
+
+---
+
+## R2 binding instructions
+
+### 1. Create the bucket
+
+```bash
+wrangler r2 bucket create offerintegrity-uploads
+```
+
+### 2. Add to `apps/worker/wrangler.toml`
+
+```toml
+[[r2_buckets]]
+binding = "OFFER_R2"
+bucket_name = "offerintegrity-uploads"
+```
+
+### 3. Add `OFFER_R2` to your `Env` interface
+
+Replace `apps/worker/src/types.ts` with the version in this zip.
+It adds `OFFER_R2: R2Bucket` alongside your existing bindings.
+
+### 4. Deploy
+
+```bash
+cd apps/worker && npm run deploy
+```
+
+### 5. Verify
+
+```bash
+wrangler r2 object list offerintegrity-uploads
+# Should return empty list (no error)
+```
+
+---
+
+## Applying the index.ts patch
+
+Open `apps/worker/src/index.ts` and make these 4 changes:
+
+**Change 1 — Add import at top:**
+```typescript
+import { handleUpload } from "./upload";
+```
+
+**Change 2 — Add CORS preflight (with your other OPTIONS handlers):**
+```typescript
+if (method === "OPTIONS" && path === "/api/upload") {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": env.APP_URL ?? "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+```
+
+**Change 3 — Add upload route (before 404 fallback):**
+```typescript
+if (method === "POST" && path === "/api/upload") {
+  return handleUpload(request, env);
+}
+```
+
+**Change 4 — In your `/api/checkout` handler, accept `uploadedKeys`:**
+
+When reading the POST body:
+```typescript
+const { ..., uploadedKeys = [] } = await request.json();
+```
+
+When writing to KV before creating the Stripe session:
+```typescript
+await env.OFFER_KV.put(`report:${token}`, JSON.stringify({
+  email,
+  intake: { name, email, offerName, ... },
+  uploadedKeys,   // ← add this line only
+  paid: false,
+  generated: false,
+  createdAt: new Date().toISOString(),
+}));
+```
+
+**⚠ Do NOT change any Stripe or pricing logic. The checkout session always uses the single $149 price.**
+
+---
+
+## Applying the report generator patch
+
+In your `reportGenerator.ts` (or wherever you call OpenAI), after loading the report from KV:
+
+```typescript
+// Load uploaded files from R2 (if any)
+let uploadedContent = "";
+if (report.uploadedKeys?.length) {
+  const fileTexts: string[] = [];
+  for (const key of report.uploadedKeys) {
+    try {
+      const obj = await env.OFFER_R2.get(key);
+      if (obj) {
+        const text = await obj.text();
+        const filename = key.split("/").pop() ?? key;
+        fileTexts.push(`--- FILE: ${filename} ---\n${text.slice(0, 8000)}`);
+      }
+    } catch {
+      // Non-fatal — skip unreadable files
+    }
+  }
+  if (fileTexts.length > 0) {
+    uploadedContent = `\n\n## SUPPORTING ASSETS PROVIDED BY CLIENT\n${fileTexts.join("\n\n")}`;
+  }
+}
+
+// Append to your prompt
+const prompt = buildPrompt(report.intake) + uploadedContent;
+```
+
+And add a "Supporting Assets Reviewed" section to your report JSON output:
+
+```typescript
+if (report.uploadedKeys?.length) {
+  reportJson.supportingAssetsReviewed = report.uploadedKeys.map(
+    (k) => k.split("/").pop() ?? k
+  );
+}
+```
+
+This adds the section to the report only if files were uploaded. If no files, the section is absent and the report is identical to before.
+
+---
+
+## Test checklist
+
+### Smoke tests (no Stripe)
+
+- [ ] `GET /` — homepage loads with new headline "Validate Your $5K–$50K Offer Before You Scale"
+- [ ] `GET /high-ticket-offer-validation` — SEO page loads and renders correctly
+- [ ] `GET /sitemap.xml` — returns valid XML with 5 URLs
+- [ ] `GET /robots.txt` — returns correct disallow rules
+- [ ] `/start` — wizard opens at Step 1 (About you)
+- [ ] Navigate wizard: Step 1 → Step 7, verify progress bar advances
+- [ ] Step 6 — upload a PDF (≤ 5 MB): file appears, removal works
+- [ ] Step 6 — attempt upload of `.exe` file: rejected with error
+- [ ] Step 6 — attempt upload of 4 files: rejected at 3-file limit
+- [ ] Step 6 — skip uploads entirely: proceed to Step 7 without error
+- [ ] Step 7 — review shows all answers correctly; "Files: N file(s) attached" appears if files uploaded
+
+### Worker tests
+
+- [ ] `POST /api/upload` with valid PDF → `{ ok: true, keys: [...] }` — 200
+- [ ] `POST /api/upload` with `.exe` file → 400 error
+- [ ] `POST /api/upload` with 4 files → 400 error
+- [ ] `POST /api/upload` 6 times from same IP in 10 min → 429 on 6th
+- [ ] `POST /api/upload` when OFFER_R2 not bound → 503 with clear message
+
+### Stripe flow (full integration)
+
+- [ ] Complete wizard with files → checkout session created → Stripe checkout opens
+- [ ] Complete wizard WITHOUT files → checkout session created → Stripe checkout opens
+- [ ] Checkout session is always for $149 regardless of file presence
+- [ ] Stripe webhook fires → report generated → "Supporting Assets Reviewed" section present in report if files were uploaded
+- [ ] Report delivered by email → PDF opens correctly
+
+### What to verify is NOT changed
+
+- [ ] No `PRICE_ID_DEEP` referenced anywhere
+- [ ] No tier selection UI visible at any point in the flow
+- [ ] Price displayed everywhere is $149
+- [ ] Stripe session price is unchanged
+- [ ] `POST /api/resend` still works (from previous release)
+
+---
+
+## Pricing constraint summary
+
+**Unchanged from your existing implementation:**
+- Stripe `PRICE_ID` — same single price
+- Checkout session creation — no branching
+- Webhook handler — no tier logic
+- Report generation — same 7-pillar output (file content appended to prompt if uploaded)
+
+**The only additions are:**
+- `uploadedKeys` stored in KV with the report record
+- Files retrieved from R2 before OpenAI call
+- "Supporting Assets Reviewed" section in report output (conditional)

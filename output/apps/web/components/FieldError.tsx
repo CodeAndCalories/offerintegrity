@@ -1,31 +1,18 @@
 /**
- * FieldError — render inline validation errors with friendly tone.
- * Usage: <FieldError message={errors.offerName} />
+ * FieldError — renders a validation error message beneath a form field.
+ * Usage: <FieldError message="Please enter your email." />
  */
 
-interface FieldErrorProps {
-  message?: string;
+interface Props {
+  message: string;
 }
 
-export default function FieldError({ message }: FieldErrorProps) {
+export default function FieldError({ message }: Props) {
   if (!message) return null;
   return (
-    <p className="mt-1.5 text-xs text-amber-400/80 flex items-center gap-1">
-      <span aria-hidden="true">⚠</span>
+    <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+      <span aria-hidden>⚠</span>
       {message}
     </p>
   );
 }
-
-/**
- * Friendly error message helpers — call these instead of raw field names.
- */
-export const friendlyErrors = {
-  required: (field: string) => `${field} is required before we can continue.`,
-  tooShort: (field: string, min: number) =>
-    `${field} needs at least ${min} characters — a little more detail helps the analysis.`,
-  tooLong: (field: string, max: number) =>
-    `${field} is over the ${max}-character limit. Trim it down a bit.`,
-  invalidEmail: () => `That doesn't look like a valid email address.`,
-  invalidPrice: () => `Enter a number — e.g. 3000 or 5000. No currency symbols needed.`,
-};

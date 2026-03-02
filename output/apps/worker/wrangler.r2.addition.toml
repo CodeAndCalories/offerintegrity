@@ -1,0 +1,54 @@
+# ─── wrangler.toml — R2 BINDING ADDITION ────────────────────────────────────
+#
+# ADD this block to your existing wrangler.toml in apps/worker/.
+# Do NOT replace your whole wrangler.toml — just append or merge this section.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[r2_buckets]]
+binding = "OFFER_R2"
+bucket_name = "offerintegrity-uploads"
+
+# ─── Dev override (optional, for local wrangler dev) ─────────────────────────
+# [env.development.r2_buckets]  ← if you use named environments
+
+# ─── SETUP STEPS ─────────────────────────────────────────────────────────────
+#
+# 1. Create the bucket:
+#    wrangler r2 bucket create offerintegrity-uploads
+#
+# 2. Confirm it exists:
+#    wrangler r2 bucket list
+#    → should show "offerintegrity-uploads"
+#
+# 3. Add the [[r2_buckets]] block above to wrangler.toml
+#
+# 4. Deploy:
+#    cd apps/worker && npm run deploy
+#
+# 5. Verify binding:
+#    wrangler r2 object list offerintegrity-uploads
+#    → should return empty list (no error)
+#
+# 6. Test upload endpoint:
+#    curl -X POST https://api.offerintegrity.io/api/upload \
+#      -F "files=@/path/to/test.pdf"
+#    → should return { "ok": true, "keys": [...], "batchId": "..." }
+#
+# ─── LIFECYCLE / CLEANUP (optional) ─────────────────────────────────────────
+#
+# Files are stored with expiresAfter metadata (7 days from upload).
+# You can add a scheduled Worker to clean up stale uploads:
+#
+# [triggers]
+# crons = ["0 3 * * *"]   # runs daily at 3am UTC
+#
+# Then in your Worker fetch handler check for the cron event and
+# list objects with expiresAfter < now() and delete them.
+# This prevents unbounded R2 storage growth from abandoned uploads.
+#
+# ─── CORS note ───────────────────────────────────────────────────────────────
+#
+# The /api/upload endpoint returns Access-Control-Allow-Origin: *
+# so the web app can upload directly from the browser.
+# If you prefer stricter CORS, change upload.ts to use env.APP_URL.
