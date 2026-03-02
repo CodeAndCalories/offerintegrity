@@ -15,7 +15,7 @@ binding = "OFFER_R2"
 bucket_name = "offerintegrity-uploads"
 
 # Cron trigger: runs daily at 03:00 UTC to delete R2 uploads older than 7 days
-[[triggers]]
+[triggers]
 crons = ["0 3 * * *"]
 
 [vars]
