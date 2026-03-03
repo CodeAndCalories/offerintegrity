@@ -1,4 +1,5 @@
 import { IntakeData, ReportJson } from "./types";
+import { computeV2Analytics } from "./v2Analytics";
 
 export async function generateReport(
   intake: IntakeData,
@@ -25,7 +26,7 @@ function generateMock(intake: IntakeData): ReportJson {
   else if (percent >= 40) verdict = "High Risk";
   else verdict = "Do Not Launch";
 
-  return {
+  const report: ReportJson = {
     meta: {
       offerName: intake.offerName || "Your Offer",
       price,
@@ -271,6 +272,17 @@ function generateMock(intake: IntakeData): ReportJson {
       ],
     },
   };
+
+  // Attach V2 computed analytics summary for PDF
+  const v2 = computeV2Analytics(report as any);
+  (report as any).v2 = {
+    closeProbabilityRange: `${v2.closeProbability.rangeLow}–${v2.closeProbability.rangeHigh}% (${v2.closeProbability.confidence})`,
+    riskBand: v2.riskPrediction.band,
+    supportedPriceBand: `$${v2.priceJustification.supportedLow.toLocaleString()}–$${v2.priceJustification.supportedHigh.toLocaleString()} (${v2.priceJustification.priceConfidence})`,
+    fragilityLabel: v2.fragility.label,
+  };
+
+  return report;
 }
 
 async function generateWithAI(intake: IntakeData, apiKey: string): Promise<ReportJson> {
@@ -321,5 +333,15 @@ Score each pillar 0-10 based on the intake. Be direct, specific, and actionable.
   const report = JSON.parse(content) as ReportJson;
   // Ensure generatedAt is set
   report.meta.generatedAt = new Date().toISOString();
+
+  // Attach V2 computed analytics summary for PDF
+  const v2ai = computeV2Analytics(report as any);
+  (report as any).v2 = {
+    closeProbabilityRange: `${v2ai.closeProbability.rangeLow}–${v2ai.closeProbability.rangeHigh}% (${v2ai.closeProbability.confidence})`,
+    riskBand: v2ai.riskPrediction.band,
+    supportedPriceBand: `$${v2ai.priceJustification.supportedLow.toLocaleString()}–$${v2ai.priceJustification.supportedHigh.toLocaleString()} (${v2ai.priceJustification.priceConfidence})`,
+    fragilityLabel: v2ai.fragility.label,
+  };
+
   return report;
 }

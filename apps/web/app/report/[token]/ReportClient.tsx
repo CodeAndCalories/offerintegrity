@@ -6,6 +6,7 @@ import ScoreMeter from "@/components/ScoreMeter";
 import WhyThisMatters from "@/components/WhyThisMatters";
 import PrintButton from "@/components/PrintButton";
 import { getPdfUrl } from "@/lib/api";
+import V2Sections from "@/components/V2Sections";
 
 type Report = any;
 
@@ -393,6 +394,9 @@ export default function ReportClient({ report, token }: { report: Report; token:
             ))}
           </div>
         </section>
+
+        {/* V2 Intelligence Sections */}
+        <V2Sections report={report} />
 
         {/* Footer actions */}
         <section className="border-t border-[#1a1a1a] pt-12 fade-up fade-up-delay-4 print:hidden">

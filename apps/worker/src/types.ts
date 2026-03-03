@@ -73,6 +73,13 @@ export interface ReportJson {
     filesReviewed: string[];
     heuristicFlags: string[];
   };
+  /** V2 computed analytics — derived at render time; also stored for PDF */
+  v2?: {
+    closeProbabilityRange?: string;   // e.g. "12–20% (Moderate)"
+    riskBand?: string;                // e.g. "Medium"
+    supportedPriceBand?: string;      // e.g. "$4,500–$5,500 (Moderate)"
+    fragilityLabel?: string;          // e.g. "Balanced"
+  };
 }
 
 export interface PillarResult {
