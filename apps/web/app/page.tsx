@@ -298,7 +298,8 @@ export default function Home() {
               View a sample report first.
             </Link>
           </p>
-
+          </div>
+          </section>
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-[#1a1a1a]">
