@@ -298,16 +298,7 @@ export default function Home() {
               View a sample report first.
             </Link>
           </p>
-          {/* Money-back guarantee */}
-          <div className="mt-8 inline-flex items-center gap-3 border border-[#2a2a2a] px-5 py-3">
-            <span className="text-gold text-base">🛡</span>
-            <div className="text-left">
-              <p className="text-xs text-parchment font-light tracking-wide">Satisfaction Guaranteed</p>
-              <p className="text-xs text-parchment-muted mt-0.5">If there&rsquo;s a technical issue on our end, we&rsquo;ll make it right.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-[#1a1a1a]">
