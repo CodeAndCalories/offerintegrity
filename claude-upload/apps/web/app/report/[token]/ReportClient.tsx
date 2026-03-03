@@ -2,9 +2,6 @@
 export const runtime = "edge";
 import { useState } from "react";
 import Nav from "@/components/Nav";
-import ScoreMeter from "@/components/ScoreMeter";
-import WhyThisMatters from "@/components/WhyThisMatters";
-import PrintButton from "@/components/PrintButton";
 import { getPdfUrl } from "@/lib/api";
 
 type Report = any;
@@ -56,62 +53,8 @@ function RiskBadge({ level }: { level: string }) {
   );
 }
 
-// Default "why this matters" bullets per pillar (fallback if not in report data)
-const DEFAULT_WHY_BULLETS: Record<string, string[]> = {
-  "Problem Severity": [
-    "Buyers in the $5k–$20k range are loss-averse — framing around what they lose beats what they gain.",
-    "Specificity matters: vague pain statements attract vague buyers.",
-    "Without quantified pain, buyers default to 'let me think about it'.",
-    "Your problem statement should make your ideal client feel seen before they read another word.",
-    "Urgency follows from severity — if the problem isn't urgent, neither is buying your offer.",
-  ],
-  "Buyer Readiness": [
-    "High-ticket sales stall most often because the person on the call can't actually say yes.",
-    "Budget, authority, and timing are the three legs of readiness — miss one and the deal collapses.",
-    "Adding qualification friction early increases close rate — serious buyers appreciate the selectivity.",
-    "At $8k+, expect a 7–14 day decision cycle unless you've created genuine urgency.",
-    "Urgency must be real or constructed — a cohort close, price increase, or capped availability all work.",
-  ],
-  "Outcome Specificity": [
-    "Buyers don't buy your process — they buy the outcome on the other side of it.",
-    "A time-bound promise creates a mental deadline that reduces buyer anxiety.",
-    "The more specific the result, the easier it is for buyers to picture themselves achieving it.",
-    "Vague outcomes attract vague buyers — specificity self-selects for serious candidates.",
-    "Secondary outcomes (lifestyle, status) close the emotional gap when the primary outcome is rational.",
-  ],
-  "Differentiation": [
-    "At $8k+, buyers are actively comparing you to alternatives — give them a reason to stop looking.",
-    "Differentiation isn't 'we care more' — it's a structural reason why your approach produces better results.",
-    "A named methodology elevates perception and reduces commoditization.",
-    "Buyers use differentiation as permission to choose you — they need a story to tell themselves.",
-    "Specificity in your mechanism ('we do X, not Y, because Z') builds trust faster than generic claims.",
-  ],
-  "Proof & Credibility": [
-    "A single quantified case study outperforms 10 generic testimonials.",
-    "Before/after narratives activate imagination — buyers picture themselves in the 'after'.",
-    "Risk transfer (guarantees, case studies) lets buyers commit without feeling like they're gambling.",
-    "Credibility markers reduce 'who are you?' friction for cold audiences.",
-    "Specificity in social proof ('she went from $8k to $28k in 11 weeks') beats vague praise every time.",
-  ],
-  "Delivery Feasibility": [
-    "A great sale followed by poor delivery destroys referral pipelines — your reputation is the product.",
-    "Over-promising at the sales stage creates delivery debt you'll pay back in refunds and churn.",
-    "A clear onboarding sequence (within 48 hours of payment) dramatically reduces buyer's remorse.",
-    "Capacity constraints, communicated honestly, create scarcity — which drives urgency.",
-    "A model you can execute consistently compounds your reputation exponentially over time.",
-  ],
-  "Value Justification": [
-    "Buyers don't evaluate price in isolation — they evaluate it against perceived value and alternatives.",
-    "A value stack (what you get for $X) shifts focus from cost to investment.",
-    "ROI framing makes the price feel like a transaction, not an expense.",
-    "Anchoring against more expensive alternatives reframes your offer as the smart choice.",
-    "Price confidence in your copy signals confidence in your delivery — hesitation breeds hesitation.",
-  ],
-};
-
 function PillarCard({ pillar }: { pillar: any }) {
   const [expanded, setExpanded] = useState(false);
-  const whyBullets = DEFAULT_WHY_BULLETS[pillar.name] || [];
 
   return (
     <div className="border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors">
@@ -214,11 +157,6 @@ function PillarCard({ pillar }: { pillar: any }) {
               </div>
             </div>
           )}
-
-          {/* "Why this matters" conversion psychology expander */}
-          {whyBullets.length > 0 && (
-            <WhyThisMatters bullets={whyBullets} title="Conversion psychology" />
-          )}
         </div>
       )}
     </div>
@@ -262,14 +200,13 @@ export default function ReportClient({ report, token }: { report: Report; token:
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3 fade-up fade-up-delay-1 print:hidden">
+            <div className="flex flex-wrap gap-3 fade-up fade-up-delay-1">
               <a
                 href={pdfUrl}
                 className="inline-flex items-center gap-2 border border-[#2a2a2a] text-parchment-dim px-4 py-2.5 text-xs tracking-widest uppercase hover:border-gold hover:text-parchment transition-colors"
               >
                 ↓ Download PDF
               </a>
-              <PrintButton />
               <button
                 onClick={copyLink}
                 className="inline-flex items-center gap-2 border border-[#2a2a2a] text-parchment-dim px-4 py-2.5 text-xs tracking-widest uppercase hover:border-gold hover:text-parchment transition-colors"
@@ -290,8 +227,18 @@ export default function ReportClient({ report, token }: { report: Report; token:
               <p className="mono text-xs text-parchment-muted tracking-widest uppercase mb-4">Overall Score</p>
               <p className="text-6xl text-gold font-light">{report.overall.scoreTotal}</p>
               <p className="mono text-sm text-parchment-muted mt-1">/ 70 points</p>
-              <div className="mt-6">
-                <ScoreMeter score={report.overall.scorePercent} size="lg" />
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="mono text-xs text-parchment-muted">0</span>
+                  <span className="mono text-xs text-parchment-muted">70</span>
+                </div>
+                <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-gold-dim to-gold rounded-full transition-all duration-1000"
+                    style={{ width: `${report.overall.scorePercent}%` }}
+                  />
+                </div>
+                <p className="mono text-xs text-gold mt-2 text-right">{report.overall.scorePercent}%</p>
               </div>
             </div>
 
@@ -395,7 +342,7 @@ export default function ReportClient({ report, token }: { report: Report; token:
         </section>
 
         {/* Footer actions */}
-        <section className="border-t border-[#1a1a1a] pt-12 fade-up fade-up-delay-4 print:hidden">
+        <section className="border-t border-[#1a1a1a] pt-12 fade-up fade-up-delay-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <p className="text-parchment-dim text-sm mb-1">Bookmark or share this report</p>
@@ -408,7 +355,6 @@ export default function ReportClient({ report, token }: { report: Report; token:
               >
                 ↓ Download PDF
               </a>
-              <PrintButton />
               <button
                 onClick={copyLink}
                 className="inline-flex items-center gap-2 border border-[#2a2a2a] text-parchment-dim px-6 py-3 text-xs tracking-widest uppercase hover:border-gold hover:text-parchment transition-colors"

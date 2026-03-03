@@ -51,15 +51,15 @@ export default function Home() {
             High Ticket Offer Validation
           </p>
           <h1 className="text-5xl md:text-7xl font-light leading-[1.1] mb-8 text-parchment">
-            Most high-ticket offers
+            Know if your offer
             <br />
-            <em className="text-gold not-italic">fail before they launch.</em>
+            <em className="text-gold not-italic">will actually sell</em>
             <br />
-            Yours doesn&rsquo;t have to.
+            before you launch.
           </h1>
           <p className="text-lg text-parchment-dim max-w-xl mb-12 leading-relaxed">
-            A structured 7-pillar validation report for founders building $2k–$20k offers.
-            Find the gaps before the market does.
+            A structured 7-pillar validation report for founders and consultants
+            building high-ticket programs. Stop guessing. Start with clarity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
@@ -69,10 +69,10 @@ export default function Home() {
               Validate My Offer →
             </Link>
             <Link
-              href="/demo"
+              href="/how-it-works"
               className="inline-flex items-center gap-3 border border-[#2a2a2a] text-parchment-dim px-8 py-4 text-sm tracking-widest uppercase hover:border-gold hover:text-parchment transition-colors"
             >
-              View Sample Report
+              How It Works
             </Link>
           </div>
         </div>
@@ -98,33 +98,6 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Credibility block */}
-      <section className="py-12 px-6 border-t border-[#1a1a1a] bg-ink-soft">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[#1a1a1a]">
-            {[
-              {
-                label: "Built for $2k–$20k offers",
-                desc: "Calibrated for high-ticket consulting, coaching, and productized services — not courses or SaaS.",
-              },
-              {
-                label: "7-pillar scoring rubric",
-                desc: "Each pillar is scored 0–10 against a defined rubric. No vague feedback. No hand-waving.",
-              },
-              {
-                label: "Instant 30-day action roadmap",
-                desc: "Prioritized by week. Know exactly what to fix first and why it matters to conversion.",
-              },
-            ].map((item) => (
-              <div key={item.label} className="bg-ink-soft px-8 py-6">
-                <p className="text-xs text-gold mono tracking-widest uppercase mb-2">{item.label}</p>
-                <p className="text-sm text-parchment-muted leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -166,19 +139,14 @@ export default function Home() {
       </section>
 
       {/* Report screenshots */}
+      {/* TODO: Add real report screenshots at /public/report-example-1.png, -2.png, -3.png */}
       <section className="py-24 px-6 border-t border-[#1a1a1a] bg-ink-soft">
         <div className="max-w-5xl mx-auto">
           <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-4">Sample Output</p>
           <h2 className="text-3xl font-light mb-4">What your report looks like</h2>
-          <p className="text-sm text-parchment-dim mb-6 max-w-xl">
+          <p className="text-sm text-parchment-dim mb-12 max-w-xl">
             A structured, scored report across all 7 pillars — with specific gaps, risks, and a prioritized action plan.
           </p>
-          <Link
-            href="/demo"
-            className="inline-flex items-center gap-2 text-sm text-gold hover:text-gold-light transition-colors tracking-wider uppercase mb-12"
-          >
-            View full sample report →
-          </Link>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {reportScreenshots.map((shot) => (
               <div key={shot.src} className="border border-[#2a2a2a] bg-ink overflow-hidden group">
@@ -274,12 +242,12 @@ export default function Home() {
         <div className="max-w-2xl mx-auto text-center">
           <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-6">One-Time Investment</p>
           <h2 className="text-4xl font-light mb-4">
-            $149 before you spend
+            $149 for clarity
             <br />
-            <em className="text-parchment-dim not-italic text-3xl">months on an offer that won&rsquo;t close</em>
+            <em className="text-parchment-dim not-italic text-3xl">before you spend months selling</em>
           </h2>
           <p className="text-parchment-dim mb-10 leading-relaxed">
-            Every week you run a misaligned offer is a week of wasted discovery calls, lost trust, and diluted positioning. Know now.
+            A single misaligned offer can cost you months of wasted effort. Know now.
           </p>
           <Link
             href="/start"
@@ -291,19 +259,12 @@ export default function Home() {
           <p className="mt-4 text-xs text-parchment-muted tracking-wide">
             Instant access. No subscription. One-time validation.
           </p>
-          {/* Sample link */}
-          <p className="mt-3 text-xs text-parchment-muted">
-            Not sure what you&rsquo;re getting?{" "}
-            <Link href="/demo" className="text-gold hover:text-gold-light underline underline-offset-2 transition-colors">
-              View a sample report first.
-            </Link>
-          </p>
           {/* Money-back guarantee */}
           <div className="mt-8 inline-flex items-center gap-3 border border-[#2a2a2a] px-5 py-3">
             <span className="text-gold text-base">🛡</span>
             <div className="text-left">
               <p className="text-xs text-parchment font-light tracking-wide">Satisfaction Guaranteed</p>
-              <p className="text-xs text-parchment-muted mt-0.5">If there&rsquo;s a technical issue on our end, we&rsquo;ll make it right.</p>
+              <p className="text-xs text-parchment-muted mt-0.5">If there's a technical issue on our end, we'll make it right.</p>
             </div>
           </div>
         </div>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://offerintegrity.io/sitemap.xml
