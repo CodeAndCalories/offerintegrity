@@ -58,8 +58,8 @@ export default function Home() {
             Yours doesn&rsquo;t have to.
           </h1>
           <p className="text-lg text-parchment-dim max-w-xl mb-12 leading-relaxed">
-            A structured 7-pillar validation report for founders building $2k–$20k offers.
-            Find the gaps before the market does.
+            Validate your $2k–$20k coaching or consulting offer before you launch.
+            Get a structured 7-pillar report showing whether your offer is likely to sell.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
