@@ -8,6 +8,7 @@ import PrintButton from "@/components/PrintButton";
 import { getPdfUrl } from "@/lib/api";
 import V2Sections from "@/components/V2Sections";
 import V25Sections from "@/components/V25Sections";
+import UI1Sections from "@/components/UI1Sections";
 
 type Report = any;
 
@@ -284,6 +285,9 @@ export default function ReportClient({ report, token }: { report: Report; token:
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-12 space-y-16">
+        {/* UI-1 Sections: Exec Summary, Grade, Close Probability, Radar, Rankings */}
+        <UI1Sections report={report} />
+
         {/* Overall score */}
         <section className="fade-up">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1a1a1a]">
