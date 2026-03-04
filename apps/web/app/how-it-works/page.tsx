@@ -60,7 +60,7 @@ export default function HowItWorks() {
           <em className="not-italic text-parchment-dim">evaluates your offer</em>
         </h1>
         <p className="text-lg text-parchment-dim max-w-xl mb-16 leading-relaxed fade-up fade-up-delay-2">
-          A structured, AI-assisted analysis across 7 pillars that every successful high-ticket offer must satisfy. Not opinions — a repeatable framework.
+          A structured analysis across 7 pillars every successful high-ticket offer must satisfy. Not opinions — a repeatable framework.
         </p>
 
         {/* Process */}
@@ -68,9 +68,9 @@ export default function HowItWorks() {
           <h2 className="text-2xl font-light mb-12 text-parchment">The Process</h2>
           <div className="space-y-0">
             {[
-              { step: "01", title: "Complete the Assessment", desc: "A 7-step structured intake form covering your offer, buyer, problem, proof, delivery, and launch plan. Takes 10–15 minutes." },
+              { step: "01", title: "Complete the Assessment", desc: "A structured intake form covering your offer, buyer, problem, proof, delivery, and launch plan. Takes 10–15 minutes." },
               { step: "02", title: "Secure Payment", desc: "One-time $149 payment via Stripe. Your intake data is held securely until payment is confirmed." },
-              { step: "03", title: "Report Generated", desc: "Our AI analyzes your intake across all 7 pillars and produces a structured JSON report. This happens once, then is stored." },
+              { step: "03", title: "Report Generated", desc: "Your intake is analyzed across all 7 pillars and turned into a detailed validation report scoring your offer. This happens once and is securely stored." },
               { step: "04", title: "Instant Access", desc: "View your report immediately after payment. No waiting. The report is also emailed to you with a permanent link and PDF." },
             ].map((item, i) => (
               <div key={item.step} className="flex gap-8 py-8 border-b border-[#1a1a1a]">
