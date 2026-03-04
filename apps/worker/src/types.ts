@@ -37,6 +37,12 @@ export interface IntakeData {
   currentAudienceSize: string;
 }
 
+export interface CompetitorEntry {
+  name: string;
+  price: string;
+  promise: string;
+}
+
 export interface KVRecord {
   intake: IntakeData;
   reportJson?: ReportJson;
@@ -47,6 +53,7 @@ export interface KVRecord {
   usageCount: number;
   stripeSessionId: string;
   uploadedFileKeys?: string[]; // R2 object keys for optional uploaded files
+  competitors?: CompetitorEntry[]; // V2.5 optional competitor context
 }
 
 export interface ReportJson {
@@ -72,6 +79,28 @@ export interface ReportJson {
   supportingAssets?: {
     filesReviewed: string[];
     heuristicFlags: string[];
+  };
+  /** V2 computed analytics — derived at render time; also stored for PDF */
+  v2?: {
+    closeProbabilityRange?: string;   // e.g. "12–20% (Moderate)"
+    riskBand?: string;                // e.g. "Medium"
+    supportedPriceBand?: string;      // e.g. "$4,500–$5,500 (Moderate)"
+    fragilityLabel?: string;          // e.g. "Balanced"
+  };
+  /** V2.5 computed analytics — market intelligence layer; stored for PDF */
+  v25?: {
+    marketSaturationLevel?: string;        // "Low" | "Medium" | "High"
+    differentiationClarityScore?: number;  // 0–100
+    differentiationClarityLabel?: string;  // "Strong" | "Moderate" | "Weak"
+    offerConfidenceLevel?: string;         // "High" | "Medium" | "Low"
+    offerConfidenceScore?: number;         // 0–100
+    mechanismClarityRating?: string;       // "Clear" | "Vague" | "Generic"
+    marketSaturationSummary?: string;
+    offerConfidenceExplanation?: string;
+    mechanismSuggestedFix?: string;
+    differentiationWarnings?: string[];
+    mechanismFlags?: string[];
+    saturationSignals?: string[];
   };
 }
 

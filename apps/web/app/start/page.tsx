@@ -23,6 +23,7 @@ type Step = {
   subtitle: string;
   fields: Field[];
   isUpload?: boolean;
+  isCompetitor?: boolean;
   isLast?: boolean;
 };
 
@@ -100,6 +101,13 @@ const INTAKE_STEPS: Step[] = [
   },
   {
     id: 8,
+    title: "Competitor Context",
+    subtitle: "Optional: tell us what your buyers compare you to",
+    fields: [],
+    isCompetitor: true,
+  },
+  {
+    id: 9,
     title: "Your Details",
     subtitle: "Where should we send your report?",
     fields: [
@@ -127,6 +135,9 @@ export default function StartPage() {
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState("");
+  const [competitors, setCompetitors] = useState<{ name: string; price: string; promise: string }[]>([
+    { name: "", price: "", promise: "" },
+  ]);
 
   const totalSteps = INTAKE_STEPS.length;
   const currentStep = INTAKE_STEPS[step - 1];
@@ -264,6 +275,7 @@ export default function StartPage() {
         email: data.email,
         turnstileToken: turnstileToken || "dev-bypass",
         uploadedFileKeys: uploadedKeys,
+        competitors: competitors.filter((c) => c.name.trim() !== ""),
       });
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
@@ -408,6 +420,94 @@ export default function StartPage() {
               </div>
             )}
 
+            {/* Step 8: Competitor Context (skippable) */}
+            {currentStep.isCompetitor && (
+              <div className="space-y-6">
+                <div className="border border-[#2a2a2a] bg-ink-soft p-6">
+                  <p className="mono text-xs text-gold tracking-[0.2em] uppercase mb-3">Optional — V2.5 Intelligence</p>
+                  <p className="text-sm text-parchment-dim leading-relaxed mb-6">
+                    Enter up to 5 competitors your buyers typically compare you against. We'll use this to compute your market saturation level and differentiation gap. This step is completely optional — skip it if you prefer.
+                  </p>
+
+                  <div className="space-y-4">
+                    {competitors.map((comp, idx) => (
+                      <div key={idx} className="border border-[#2a2a2a] p-4 space-y-3 relative">
+                        <p className="mono text-xs text-parchment-muted tracking-widest uppercase">
+                          Competitor {idx + 1}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-parchment-dim mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={comp.name}
+                              onChange={(e) => {
+                                const updated = [...competitors];
+                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                setCompetitors(updated);
+                              }}
+                              placeholder="e.g. John Smith Consulting"
+                              className="w-full bg-ink border border-[#2a2a2a] text-parchment px-3 py-2 text-sm focus:outline-none focus:border-gold transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-parchment-dim mb-1">Their Price (USD)</label>
+                            <input
+                              type="text"
+                              value={comp.price}
+                              onChange={(e) => {
+                                const updated = [...competitors];
+                                updated[idx] = { ...updated[idx], price: e.target.value };
+                                setCompetitors(updated);
+                              }}
+                              placeholder="e.g. 3000"
+                              className="w-full bg-ink border border-[#2a2a2a] text-parchment px-3 py-2 text-sm focus:outline-none focus:border-gold transition-colors"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-parchment-dim mb-1">Their Promise / Positioning</label>
+                          <input
+                            type="text"
+                            value={comp.promise}
+                            onChange={(e) => {
+                              const updated = [...competitors];
+                              updated[idx] = { ...updated[idx], promise: e.target.value };
+                              setCompetitors(updated);
+                            }}
+                            placeholder="e.g. Scale your agency to 7 figures with our proven framework"
+                            className="w-full bg-ink border border-[#2a2a2a] text-parchment px-3 py-2 text-sm focus:outline-none focus:border-gold transition-colors"
+                          />
+                        </div>
+                        {competitors.length > 1 && (
+                          <button
+                            onClick={() => setCompetitors(competitors.filter((_, i) => i !== idx))}
+                            className="absolute top-3 right-3 text-parchment-muted hover:text-red-400 transition-colors text-xs mono"
+                            aria-label="Remove competitor"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {competitors.length < 5 && (
+                    <button
+                      onClick={() => setCompetitors([...competitors, { name: "", price: "", promise: "" }])}
+                      className="mt-4 text-xs text-gold hover:text-gold-light transition-colors mono tracking-widest uppercase"
+                    >
+                      + Add Competitor
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-parchment-muted italic">
+                  Skip this step if you don't have competitor data — your saturation analysis will default to Low with no competitor context.
+                </p>
+              </div>
+            )}
+
             {/* Final step: consent + turnstile */}
             {currentStep.isLast && (
               <>
@@ -447,7 +547,11 @@ export default function StartPage() {
 
             {step < totalSteps ? (
               <button onClick={handleNext} className="bg-gold text-ink px-8 py-3 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors">
-                {currentStep.isUpload ? (uploadFiles.length > 0 ? `Continue with ${uploadFiles.length} file${uploadFiles.length > 1 ? "s" : ""} →` : "Skip & Continue →") : "Continue →"}
+                {currentStep.isUpload
+                  ? (uploadFiles.length > 0 ? `Continue with ${uploadFiles.length} file${uploadFiles.length > 1 ? "s" : ""} →` : "Skip & Continue →")
+                  : currentStep.isCompetitor
+                  ? (competitors.some((c) => c.name.trim()) ? "Continue →" : "Skip & Continue →")
+                  : "Continue →"}
               </button>
             ) : (
               <button
