@@ -149,6 +149,7 @@ export default {
         email: string;
         turnstileToken: string;
         uploadedFileKeys?: string[];
+        competitors?: { name: string; price: string; promise: string }[];
       };
       try {
         body = await request.json();
@@ -156,7 +157,7 @@ export default {
         return errR("Invalid JSON");
       }
 
-      const { intake, email, turnstileToken, uploadedFileKeys = [] } = body;
+      const { intake, email, turnstileToken, uploadedFileKeys = [], competitors = [] } = body;
       if (!email || !email.includes("@")) return errR("Valid email required");
       if (!turnstileToken) return errR("Turnstile token required");
 
@@ -171,6 +172,7 @@ export default {
       const record: KVRecord = {
         intake,
         email,
+        competitors,
         createdAt: new Date().toISOString(),
         paid: false,
         generated: false,
@@ -260,7 +262,7 @@ export default {
         record.intake,
         useRealAI,
         env.OPENAI_API_KEY,
-        record.uploadedFileKeys
+        record.competitors ?? []
       );
 
       record.reportJson = reportJson;

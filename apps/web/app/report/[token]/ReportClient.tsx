@@ -7,6 +7,7 @@ import WhyThisMatters from "@/components/WhyThisMatters";
 import PrintButton from "@/components/PrintButton";
 import { getPdfUrl } from "@/lib/api";
 import V2Sections from "@/components/V2Sections";
+import V25Sections from "@/components/V25Sections";
 
 type Report = any;
 
@@ -397,6 +398,20 @@ export default function ReportClient({ report, token }: { report: Report; token:
 
         {/* V2 Intelligence Sections */}
         <V2Sections report={report} />
+
+        {/* V2.5 Market Intelligence Sections */}
+        {report.v25 && (
+          <section className="space-y-24 fade-up">
+            <div className="border-t border-[#1a1a1a] pt-16">
+              <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-4">V2.5 Intelligence Layer</p>
+              <h2 className="text-3xl font-light mb-2">Market Intelligence Summary</h2>
+              <p className="text-sm text-parchment-dim max-w-xl">
+                Additive signal layer analyzing market saturation, differentiation clarity, offer confidence, and mechanism strength.
+              </p>
+            </div>
+            <V25Sections report={report} competitors={report._competitors ?? []} />
+          </section>
+        )}
 
         {/* Footer actions */}
         <section className="border-t border-[#1a1a1a] pt-12 fade-up fade-up-delay-4 print:hidden">

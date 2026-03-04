@@ -86,6 +86,58 @@ export function generatePDF(report: ReportJson): Uint8Array {
     lines.push("");
   }
 
+  // V2.5 Market Intelligence summary (appended if present)
+  if ((report as any).v25) {
+    const v25 = (report as any).v25;
+    lines.push("");
+    lines.push("=".repeat(60));
+    lines.push("V2.5 MARKET INTELLIGENCE SUMMARY");
+    lines.push("=".repeat(60));
+    lines.push("");
+
+    lines.push("MARKET SATURATION");
+    lines.push("-".repeat(40));
+    if (v25.marketSaturationLevel)
+      lines.push(`  Saturation Level        : ${v25.marketSaturationLevel}`);
+    if (v25.marketSaturationSummary)
+      lines.push(`  Summary                 : ${v25.marketSaturationSummary}`);
+    if (v25.saturationSignals?.length) {
+      lines.push("  Market Signals:");
+      (v25.saturationSignals as string[]).forEach((s: string) => lines.push(`    - ${s}`));
+    }
+    lines.push("");
+
+    lines.push("DIFFERENTIATION GAP");
+    lines.push("-".repeat(40));
+    if (v25.differentiationClarityLabel)
+      lines.push(`  Clarity                 : ${v25.differentiationClarityLabel} (${v25.differentiationClarityScore ?? "—"}/100)`);
+    if (v25.differentiationWarnings?.length) {
+      lines.push("  Warnings:");
+      (v25.differentiationWarnings as string[]).forEach((w: string) => lines.push(`    ! ${w}`));
+    }
+    lines.push("");
+
+    lines.push("OFFER CONFIDENCE SCORE");
+    lines.push("-".repeat(40));
+    if (v25.offerConfidenceLevel)
+      lines.push(`  Confidence              : ${v25.offerConfidenceLevel} (${v25.offerConfidenceScore ?? "—"}/100)`);
+    if (v25.offerConfidenceExplanation)
+      lines.push(`  Explanation             : ${v25.offerConfidenceExplanation}`);
+    lines.push("");
+
+    lines.push("MECHANISM CLARITY");
+    lines.push("-".repeat(40));
+    if (v25.mechanismClarityRating)
+      lines.push(`  Clarity Rating          : ${v25.mechanismClarityRating}`);
+    if (v25.mechanismFlags?.length) {
+      lines.push("  Flags:");
+      (v25.mechanismFlags as string[]).forEach((f: string) => lines.push(`    ${f}`));
+    }
+    if (v25.mechanismSuggestedFix)
+      lines.push(`  Suggested Fix           : ${v25.mechanismSuggestedFix}`);
+    lines.push("");
+  }
+
   const textContent = lines.join("\n");
 
   // Build minimal valid PDF

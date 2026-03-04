@@ -1,18 +1,20 @@
-import { IntakeData, ReportJson } from "./types";
+import { IntakeData, ReportJson, CompetitorEntry } from "./types";
 import { computeV2Analytics } from "./v2Analytics";
+import { computeV25Analytics } from "./v25Analytics";
 
 export async function generateReport(
   intake: IntakeData,
   useRealAI: boolean,
-  openAIKey?: string
+  openAIKey?: string,
+  competitors: CompetitorEntry[] = []
 ): Promise<ReportJson> {
   if (useRealAI && openAIKey) {
-    return generateWithAI(intake, openAIKey);
+    return generateWithAI(intake, openAIKey, competitors);
   }
-  return generateMock(intake);
+  return generateMock(intake, competitors);
 }
 
-function generateMock(intake: IntakeData): ReportJson {
+function generateMock(intake: IntakeData, competitors: CompetitorEntry[] = []): ReportJson {
   const price = parseFloat(intake.price) || 5000;
   const now = new Date().toISOString();
 
@@ -282,10 +284,27 @@ function generateMock(intake: IntakeData): ReportJson {
     fragilityLabel: v2.fragility.label,
   };
 
+  // Attach V2.5 market intelligence analytics
+  const v25 = computeV25Analytics(report as any, competitors);
+  (report as any).v25 = {
+    marketSaturationLevel:       v25.marketSaturation.level,
+    differentiationClarityScore: v25.differentiationGap.clarityScore,
+    differentiationClarityLabel: v25.differentiationGap.clarityLabel,
+    offerConfidenceLevel:        v25.offerConfidence.level,
+    offerConfidenceScore:        v25.offerConfidence.score,
+    mechanismClarityRating:      v25.mechanismClarity.clarityRating,
+    marketSaturationSummary:     v25.marketSaturation.summary,
+    offerConfidenceExplanation:  v25.offerConfidence.explanation,
+    mechanismSuggestedFix:       v25.mechanismClarity.suggestedFix,
+    differentiationWarnings:     v25.differentiationGap.warnings,
+    mechanismFlags:              v25.mechanismClarity.flags.map((f) => `[${f.severity}] ${f.description}`),
+    saturationSignals:           v25.marketSaturation.signals,
+  };
+
   return report;
 }
 
-async function generateWithAI(intake: IntakeData, apiKey: string): Promise<ReportJson> {
+async function generateWithAI(intake: IntakeData, apiKey: string, competitors: CompetitorEntry[] = []): Promise<ReportJson> {
   const prompt = `You are an expert high-ticket offer strategist. Analyze the following offer and return ONLY a JSON object matching the exact schema provided. No markdown, no explanation, just raw JSON.
 
 OFFER DATA:
@@ -341,6 +360,23 @@ Score each pillar 0-10 based on the intake. Be direct, specific, and actionable.
     riskBand: v2ai.riskPrediction.band,
     supportedPriceBand: `$${v2ai.priceJustification.supportedLow.toLocaleString()}–$${v2ai.priceJustification.supportedHigh.toLocaleString()} (${v2ai.priceJustification.priceConfidence})`,
     fragilityLabel: v2ai.fragility.label,
+  };
+
+  // Attach V2.5 market intelligence analytics
+  const v25ai = computeV25Analytics(report as any, competitors);
+  (report as any).v25 = {
+    marketSaturationLevel:       v25ai.marketSaturation.level,
+    differentiationClarityScore: v25ai.differentiationGap.clarityScore,
+    differentiationClarityLabel: v25ai.differentiationGap.clarityLabel,
+    offerConfidenceLevel:        v25ai.offerConfidence.level,
+    offerConfidenceScore:        v25ai.offerConfidence.score,
+    mechanismClarityRating:      v25ai.mechanismClarity.clarityRating,
+    marketSaturationSummary:     v25ai.marketSaturation.summary,
+    offerConfidenceExplanation:  v25ai.offerConfidence.explanation,
+    mechanismSuggestedFix:       v25ai.mechanismClarity.suggestedFix,
+    differentiationWarnings:     v25ai.differentiationGap.warnings,
+    mechanismFlags:              v25ai.mechanismClarity.flags.map((f) => `[${f.severity}] ${f.description}`),
+    saturationSignals:           v25ai.marketSaturation.signals,
   };
 
   return report;

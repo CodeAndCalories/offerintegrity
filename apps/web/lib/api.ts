@@ -24,6 +24,7 @@ export async function createCheckout(params: {
   email: string;
   turnstileToken: string;
   uploadedFileKeys?: string[];
+  competitors?: { name: string; price: string; promise: string }[];
 }): Promise<{ checkoutUrl: string; reportToken: string }> {
   const res = await fetch(`${getWorkerUrl()}/api/create-checkout`, {
     method: "POST",
