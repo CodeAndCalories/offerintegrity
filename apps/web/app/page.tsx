@@ -59,23 +59,30 @@ export default function Home() {
           </h1>
           <p className="text-lg text-parchment-dim max-w-xl mb-12 leading-relaxed">
             Validate your $2k–$20k coaching or consulting offer before you launch.
-            Get a structured 7-pillar report showing whether your offer is likely to sell.
+            Get a structured 7-pillar scorecard plus a prioritized 30-day action plan.
+          </p>
+           <p className="text-sm text-parchment-dim mb-8">
+            Used by coaches, consultants, and agencies building $2k–$20k offers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               href="/start"
               className="inline-flex items-center gap-3 bg-gold text-ink px-8 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
             >
-              Validate My Offer →
+              Get My Validation Report →
             </Link>
             <Link
               href="/demo"
               className="inline-flex items-center gap-3 border border-[#2a2a2a] text-parchment-dim px-8 py-4 text-sm tracking-widest uppercase hover:border-gold hover:text-parchment transition-colors"
             >
-              View Sample Report
+              See a Real Report
             </Link>
           </div>
         </div>
+
+         <p className="text-xs text-parchment-dim mt-4">
+         Takes about 10 minutes. Instant report after payment.
+         </p>
 
         {/* Price signal */}
         <div className="mt-16 pt-16 border-t border-[#1a1a1a]">
