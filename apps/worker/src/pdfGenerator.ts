@@ -14,6 +14,82 @@ export function generatePDF(report: ReportJson): Uint8Array {
   lines.push(`Price: $${report.meta.price.toLocaleString()} USD`);
   lines.push(`Generated: ${new Date(report.meta.generatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
   lines.push("");
+
+  // ── UI-1: Executive Summary ──────────────────────────────────────────────
+  const pct: number = report.overall.scorePercent;
+  const scoreTot: number = report.overall.scoreTotal;
+
+  // Grade
+  function ui1Grade(p: number): string {
+    if (p >= 90) return "A+"; if (p >= 83) return "A"; if (p >= 77) return "A-";
+    if (p >= 72) return "B+"; if (p >= 65) return "B"; if (p >= 58) return "B-";
+    if (p >= 50) return "C+"; if (p >= 43) return "C"; if (p >= 36) return "C-";
+    return "D";
+  }
+  function ui1GradeTagline(p: number): string {
+    if (p >= 90) return "Exceptional — ready to scale";
+    if (p >= 83) return "Strong — minor polish needed";
+    if (p >= 77) return "Solid — a few gaps to close";
+    if (p >= 72) return "Above average — refine before scaling";
+    if (p >= 65) return "Promising — targeted work required";
+    if (p >= 58) return "Moderate — notable gaps present";
+    if (p >= 50) return "Below average — significant rework needed";
+    if (p >= 43) return "Weak — foundational issues";
+    if (p >= 36) return "High risk — do not scale";
+    return "Do not launch — critical failures";
+  }
+
+  const pillars: any[] = report.pillars;
+  const sorted = [...pillars].sort((a: any, b: any) => b.score - a.score);
+  const topPillar  = sorted[0];
+  const weakPillar = sorted[sorted.length - 1];
+  const grade = ui1Grade(pct);
+
+  // Close probability
+  let cpLow: number, cpHigh: number;
+  if (pct >= 80)      { cpLow = 28; cpHigh = 45; }
+  else if (pct >= 65) { cpLow = 18; cpHigh = 30; }
+  else if (pct >= 50) { cpLow = 10; cpHigh = 20; }
+  else                { cpLow = 4;  cpHigh = 12; }
+
+  function ps(id: string): number {
+    return (pillars.find((p: any) => p.id === id) as any)?.score ?? 5;
+  }
+  const confScore = (ps("proof") + ps("differentiation") + ps("readiness")) / 3;
+  const confidence = confScore >= 7 ? "High" : confScore >= 5 ? "Moderate" : "Low";
+
+  lines.push("EXECUTIVE SUMMARY");
+  lines.push("=" .repeat(60));
+  lines.push(`Grade: ${grade}  |  Score: ${scoreTot}/70 (${pct}%)  |  Verdict: ${report.overall.verdict}`);
+  lines.push(`Grade Meaning: ${ui1GradeTagline(pct)}`);
+  lines.push("");
+  const verdictMap: Record<string, string> = {
+    "Launch Ready":           "is positioned to launch and convert at premium pricing",
+    "Refine Before Scaling":  "shows meaningful potential but requires targeted refinement before scaling",
+    "High Risk":              "carries significant structural risk that will suppress conversion rates",
+    "Do Not Launch":          "has critical gaps that make it unready for market",
+  };
+  lines.push(`${report.meta.offerName} ($${report.meta.price.toLocaleString()}) scores ${scoreTot}/70 — Grade ${grade} — and ${verdictMap[report.overall.verdict] ?? "requires review"}.`);
+  lines.push(`Top Strength: ${topPillar.name} (${topPillar.score}/10)`);
+  lines.push(`Top Risk:     ${weakPillar.name} (${weakPillar.score}/10)`);
+  const topRec = (weakPillar.recommendations ?? []).find((r: any) => r.priority === "High") ?? weakPillar.recommendations?.[0];
+  if (topRec) lines.push(`Key Action:   ${topRec.action}`);
+  lines.push(`Close Probability: ${cpLow}–${cpHigh}%  (Confidence: ${confidence})`);
+  lines.push("");
+
+  // ── UI-1: Pillar Ranking ─────────────────────────────────────────────────
+  lines.push("PILLAR RANKING");
+  lines.push("-".repeat(40));
+  lines.push("Strongest Areas:");
+  sorted.slice(0, 3).forEach((p: any, i: number) =>
+    lines.push(`  ${i + 1}. ${p.name.padEnd(26)} ${scoreBar(p.score)}`)
+  );
+  lines.push("Weakest Areas:");
+  sorted.slice(-3).reverse().forEach((p: any, i: number) =>
+    lines.push(`  ${i + 1}. ${p.name.padEnd(26)} ${scoreBar(p.score)}`)
+  );
+  lines.push("");
+  lines.push("=".repeat(60));
   lines.push("OVERALL SCORE");
   lines.push("-".repeat(40));
   lines.push(`Score: ${report.overall.scoreTotal}/70 (${report.overall.scorePercent}%)`);
