@@ -301,10 +301,13 @@ function generateMock(intake: IntakeData, competitors: CompetitorEntry[] = []): 
     saturationSignals:           v25.marketSaturation.signals,
   };
 
-  return report;
-}
+  // Store competitors for PDF price benchmark (display-only, not scored)
+  if (competitors.length > 0) {
+    (report as any)._competitors = competitors;
+  }
 
-async function generateWithAI(intake: IntakeData, apiKey: string, competitors: CompetitorEntry[] = []): Promise<ReportJson> {
+  return report;
+}async function generateWithAI(intake: IntakeData, apiKey: string, competitors: CompetitorEntry[] = []): Promise<ReportJson> {
   const prompt = `You are an expert high-ticket offer strategist. Analyze the following offer and return ONLY a JSON object matching the exact schema provided. No markdown, no explanation, just raw JSON.
 
 OFFER DATA:
@@ -378,6 +381,11 @@ Score each pillar 0-10 based on the intake. Be direct, specific, and actionable.
     mechanismFlags:              v25ai.mechanismClarity.flags.map((f) => `[${f.severity}] ${f.description}`),
     saturationSignals:           v25ai.marketSaturation.signals,
   };
+
+  // Store competitors for PDF price benchmark (display-only, not scored)
+  if (competitors.length > 0) {
+    (report as any)._competitors = competitors;
+  }
 
   return report;
 }

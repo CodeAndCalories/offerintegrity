@@ -75,6 +75,26 @@ export function generatePDF(report: ReportJson): Uint8Array {
   const topRec = (weakPillar.recommendations ?? []).find((r: any) => r.priority === "High") ?? weakPillar.recommendations?.[0];
   if (topRec) lines.push(`Key Action:   ${topRec.action}`);
   lines.push(`Close Probability: ${cpLow}–${cpHigh}%  (Confidence: ${confidence})`);
+
+  // Price positioning sentence if competitor data present
+  const rawCompetitors: { name: string; price: string; promise: string }[] =
+    (report as any)._competitors ?? [];
+  const benchPrices = rawCompetitors
+    .map((c) => parseFloat(c.price.replace(/[^0-9.]/g, "")) || 0)
+    .filter((p) => p > 0);
+  if (benchPrices.length > 0) {
+    const benchAvg = Math.round(benchPrices.reduce((a, b) => a + b, 0) / benchPrices.length);
+    const userP = report.meta.price as number;
+    const posLabel =
+      userP >= benchAvg * 1.25 ? "Premium" :
+      userP <= benchAvg * 0.75 ? "Budget" : "Market";
+    const posImplication: Record<string, string> = {
+      Premium: `premium pricing (${((userP / benchAvg - 1) * 100).toFixed(0)}% above avg) — buyers expect stronger proof and differentiation.`,
+      Market:  `market-rate pricing (near the $${benchAvg.toLocaleString()} competitor average) — differentiation quality will determine wins.`,
+      Budget:  `below-market pricing ($${benchAvg.toLocaleString()} avg) — consider raising price alongside stronger proof.`,
+    };
+    lines.push(`Price Position: ${posLabel} — ${posImplication[posLabel]}`);
+  }
   lines.push("");
 
   // ── UI-1: Pillar Ranking ─────────────────────────────────────────────────
@@ -213,6 +233,47 @@ export function generatePDF(report: ReportJson): Uint8Array {
       lines.push(`  Suggested Fix           : ${v25.mechanismSuggestedFix}`);
     lines.push("");
   }
+
+  // Price Benchmark block (appended if competitor data was stored)
+  const pdfCompetitors: { name: string; price: string; promise: string }[] =
+    (report as any)._competitors ?? [];
+  const pdfPrices = pdfCompetitors
+    .map((c) => parseFloat(c.price.replace(/[^0-9.]/g, "")) || 0)
+    .filter((p) => p > 0);
+  lines.push("");
+  lines.push("=".repeat(60));
+  lines.push("PRICE BENCHMARK");
+  lines.push("=".repeat(60));
+  lines.push("");
+  if (pdfPrices.length === 0) {
+    lines.push("  No competitor data provided — price positioning not benchmarked.");
+  } else {
+    const pdfAvg    = Math.round(pdfPrices.reduce((a, b) => a + b, 0) / pdfPrices.length);
+    const pdfSorted = [...pdfPrices].sort((a, b) => a - b);
+    const pdfMid    = Math.floor(pdfSorted.length / 2);
+    const pdfMedian = Math.round(
+      pdfSorted.length % 2 === 0
+        ? (pdfSorted[pdfMid - 1] + pdfSorted[pdfMid]) / 2
+        : pdfSorted[pdfMid]
+    );
+    const userP2 = report.meta.price as number;
+    const posLabel2 =
+      userP2 >= pdfAvg * 1.25 ? "Premium" :
+      userP2 <= pdfAvg * 0.75 ? "Budget" : "Market";
+    const posImplication2: Record<string, string> = {
+      Premium: "Buyers expect stronger proof, clearer differentiation, and higher-touch delivery to justify the premium.",
+      Market:  "Differentiation and proof quality, not price, will determine who wins the deal.",
+      Budget:  "May attract price-sensitive buyers. Consider raising price alongside stronger proof to protect perceived value.",
+    };
+    lines.push(`  Your Price              : $${userP2.toLocaleString()}`);
+    lines.push(`  Avg Competitor Price    : $${pdfAvg.toLocaleString()}`);
+    lines.push(`  Median Competitor Price : $${pdfMedian.toLocaleString()}`);
+    lines.push(`  Competitors Analyzed    : ${pdfPrices.length}`);
+    lines.push(`  Positioning             : ${posLabel2}`);
+    lines.push("");
+    lines.push(`  Implication: ${posImplication2[posLabel2]}`);
+  }
+  lines.push("");
 
   const textContent = lines.join("\n");
 
