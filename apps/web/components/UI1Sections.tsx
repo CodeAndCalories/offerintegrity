@@ -6,7 +6,10 @@ import {
   computePillarRanking,
   computeCloseProbMeter,
   computeExecSummary,
+  computePriceBenchmark,
   type OfferGrade,
+  type PriceBenchmarkResult,
+  type PricePositionLabel,
 } from "@/lib/ui1Analytics";
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
@@ -22,8 +25,14 @@ function SectionDivider({ label, title }: { label: string; title: string }) {
 
 // ─── 1. Executive Summary Card ────────────────────────────────────────────────
 
-function ExecutiveSummaryCard({ report }: { report: any }) {
-  const summary = computeExecSummary(report);
+function ExecutiveSummaryCard({
+  report,
+  competitors = [],
+}: {
+  report: any;
+  competitors?: { name: string; price: string; promise: string }[];
+}) {
+  const summary = computeExecSummary(report, competitors);
 
   return (
     <section className="fade-up ui1-exec-summary">
@@ -242,15 +251,150 @@ function PillarRankingSection({ report }: { report: any }) {
   );
 }
 
+// ─── 6. Price Benchmark Section ───────────────────────────────────────────────
+
+const POSITION_STYLES: Record<
+  PricePositionLabel,
+  { badge: string; bar: string; label: string }
+> = {
+  Premium: {
+    badge: "text-violet-400 border-violet-800/40 bg-violet-950/20",
+    bar:   "bg-violet-500",
+    label: "Premium",
+  },
+  Market: {
+    badge: "text-gold border-gold/30 bg-gold/5",
+    bar:   "bg-gold",
+    label: "Market",
+  },
+  Budget: {
+    badge: "text-amber-400 border-amber-800/40 bg-amber-950/20",
+    bar:   "bg-amber-500",
+    label: "Budget",
+  },
+};
+
+export function PriceBenchmarkSection({
+  benchmark,
+}: {
+  benchmark: PriceBenchmarkResult;
+}) {
+  if (!benchmark.hasData) {
+    return (
+      <div className="border border-[#1a1a1a] bg-ink p-8 ui1-price-benchmark">
+        <p className="mono text-xs text-parchment-muted tracking-widest uppercase mb-3">
+          Price Benchmark
+        </p>
+        <p className="text-sm text-parchment-dim">
+          No competitor data provided — price positioning cannot be benchmarked.
+        </p>
+      </div>
+    );
+  }
+
+  const style = POSITION_STYLES[benchmark.positionLabel];
+  // Position bar fill: userPrice / (max(avg*2, userPrice*1.1)) clamped 0–100
+  const maxScale = Math.max(benchmark.avgPrice * 2, benchmark.userPrice * 1.1, 1);
+  const userFill  = Math.min(100, Math.round((benchmark.userPrice / maxScale) * 100));
+  const avgFill   = Math.min(100, Math.round((benchmark.avgPrice  / maxScale) * 100));
+  const medFill   = Math.min(100, Math.round((benchmark.medianPrice / maxScale) * 100));
+
+  return (
+    <div className="border border-[#1a1a1a] bg-ink ui1-price-benchmark">
+      {/* Header row */}
+      <div className="p-8 pb-6 border-b border-[#1a1a1a]">
+        <div className="flex flex-wrap items-center gap-4 mb-3">
+          <p className="mono text-xs text-parchment-muted tracking-widest uppercase">
+            Price Benchmark
+          </p>
+          <span className={`mono text-xs px-3 py-1 border rounded-sm ${style.badge}`}>
+            {style.label} Positioning
+          </span>
+          <span className="mono text-xs text-parchment-muted">
+            {benchmark.competitorCount} competitor{benchmark.competitorCount !== 1 ? "s" : ""} analyzed
+          </span>
+        </div>
+        <p className="text-sm text-parchment-dim leading-relaxed max-w-2xl">
+          {benchmark.positionImplication}
+        </p>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1a1a1a]">
+        {/* Your price */}
+        <div className="bg-ink p-6">
+          <p className="mono text-xs text-parchment-muted tracking-widest uppercase mb-1">
+            Your Price
+          </p>
+          <p className="text-3xl font-light text-parchment mt-2">
+            ${benchmark.userPrice.toLocaleString()}
+          </p>
+          <div className="mt-4">
+            <div className="h-1.5 bg-[#111] rounded-full">
+              <div
+                className={`h-full rounded-full ${style.bar} opacity-80`}
+                style={{ width: `${userFill}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Avg competitor price */}
+        <div className="bg-ink p-6">
+          <p className="mono text-xs text-parchment-muted tracking-widest uppercase mb-1">
+            Avg Competitor Price
+          </p>
+          <p className="text-3xl font-light text-parchment mt-2">
+            ${benchmark.avgPrice.toLocaleString()}
+          </p>
+          <div className="mt-4">
+            <div className="h-1.5 bg-[#111] rounded-full">
+              <div
+                className="h-full rounded-full bg-parchment opacity-30"
+                style={{ width: `${avgFill}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Median competitor price */}
+        <div className="bg-ink p-6">
+          <p className="mono text-xs text-parchment-muted tracking-widest uppercase mb-1">
+            Median Competitor Price
+          </p>
+          <p className="text-3xl font-light text-parchment mt-2">
+            ${benchmark.medianPrice.toLocaleString()}
+          </p>
+          <div className="mt-4">
+            <div className="h-1.5 bg-[#111] rounded-full">
+              <div
+                className="h-full rounded-full bg-parchment opacity-20"
+                style={{ width: `${medFill}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Composite UI1Sections export ─────────────────────────────────────────────
 
-export default function UI1Sections({ report }: { report: any }) {
+export default function UI1Sections({
+  report,
+  competitors = [],
+}: {
+  report: any;
+  competitors?: { name: string; price: string; promise: string }[];
+}) {
   const grade = computeOfferGrade(report.overall.scorePercent);
+  const benchmark = computePriceBenchmark(report, competitors);
 
   return (
     <>
       {/* 1. Executive Summary */}
-      <ExecutiveSummaryCard report={report} />
+      <ExecutiveSummaryCard report={report} competitors={competitors} />
 
       {/* 2+3. Grade + Close Probability side-by-side */}
       <section className="fade-up fade-up-delay-1">
@@ -292,6 +436,12 @@ export default function UI1Sections({ report }: { report: any }) {
           <PillarRadarSection report={report} />
           <PillarRankingSection report={report} />
         </div>
+      </section>
+
+      {/* 6. Price Benchmark — shown in Market Intelligence area */}
+      <section className="fade-up fade-up-delay-3">
+        <SectionDivider label="Market Intelligence" title="Price Benchmark" />
+        <PriceBenchmarkSection benchmark={benchmark} />
       </section>
     </>
   );

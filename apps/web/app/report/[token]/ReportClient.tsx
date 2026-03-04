@@ -285,8 +285,8 @@ export default function ReportClient({ report, token }: { report: Report; token:
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-12 space-y-16">
-        {/* UI-1 Sections: Exec Summary, Grade, Close Probability, Radar, Rankings */}
-        <UI1Sections report={report} />
+        {/* UI-1 Sections: Exec Summary, Grade, Close Probability, Radar, Rankings, Price Benchmark */}
+        <UI1Sections report={report} competitors={report._competitors ?? []} />
 
         {/* Overall score */}
         <section className="fade-up">

@@ -140,15 +140,108 @@ export function computeCloseProbMeter(report: any): CloseProbMeter {
   };
 }
 
+// ─── Price Benchmark ──────────────────────────────────────────────────────────
+
+export type PricePositionLabel = "Premium" | "Market" | "Budget";
+
+export interface PriceBenchmarkResult {
+  hasData: boolean;
+  competitorCount: number;
+  avgPrice: number;
+  medianPrice: number;
+  userPrice: number;
+  positionLabel: PricePositionLabel;
+  positionImplication: string;
+  competitorPrices: number[];   // parsed USD values (for display)
+}
+
+function parsePriceUSD(raw: string): number {
+  const cleaned = raw.replace(/[^0-9.]/g, "");
+  return parseFloat(cleaned) || 0;
+}
+
+export function computePriceBenchmark(
+  report: any,
+  competitors: { name: string; price: string; promise: string }[] = []
+): PriceBenchmarkResult {
+  const userPrice: number = report.meta.price as number;
+
+  if (!competitors || competitors.length === 0) {
+    return {
+      hasData: false,
+      competitorCount: 0,
+      avgPrice: 0,
+      medianPrice: 0,
+      userPrice,
+      positionLabel: "Market",
+      positionImplication: "No competitor data provided — positioning cannot be benchmarked.",
+      competitorPrices: [],
+    };
+  }
+
+  const prices = competitors.map((c) => parsePriceUSD(c.price)).filter((p) => p > 0);
+  if (prices.length === 0) {
+    return {
+      hasData: false,
+      competitorCount: competitors.length,
+      avgPrice: 0,
+      medianPrice: 0,
+      userPrice,
+      positionLabel: "Market",
+      positionImplication: "Competitor prices could not be parsed — check input format.",
+      competitorPrices: [],
+    };
+  }
+
+  const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+  const sorted = [...prices].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+
+  let positionLabel: PricePositionLabel;
+  let positionImplication: string;
+
+  if (userPrice >= avg * 1.25) {
+    positionLabel = "Premium";
+    positionImplication =
+      "Your price sits above the market average — buyers will expect stronger proof, clearer differentiation, and higher-touch delivery to justify the premium.";
+  } else if (userPrice <= avg * 0.75) {
+    positionLabel = "Budget";
+    positionImplication =
+      "Your price is below market average — this may attract price-sensitive buyers but could undermine perceived value at the premium end. Consider raising price alongside stronger proof.";
+  } else {
+    positionLabel = "Market";
+    positionImplication =
+      "Your price is in line with the market average — differentiation and proof quality, not price, will determine who wins the deal.";
+  }
+
+  return {
+    hasData: true,
+    competitorCount: prices.length,
+    avgPrice: Math.round(avg),
+    medianPrice: Math.round(median),
+    userPrice,
+    positionLabel,
+    positionImplication,
+    competitorPrices: prices,
+  };
+}
+
 // ─── Executive Summary Card ───────────────────────────────────────────────────
 
 export interface ExecSummary {
   sentences: string[];  // 3–5 sentences
   topStrengthPillar: string;
   topRiskPillar: string;
+  priceBenchmark?: PriceBenchmarkResult;  // injected if competitor data present
 }
 
-export function computeExecSummary(report: any): ExecSummary {
+export function computeExecSummary(
+  report: any,
+  competitors: { name: string; price: string; promise: string }[] = []
+): ExecSummary {
   const pillars: any[] = report.pillars;
   const overall = report.overall;
   const pct: number = overall.scorePercent;
@@ -208,9 +301,23 @@ export function computeExecSummary(report: any): ExecSummary {
   const closeMeter = computeCloseProbMeter(report);
   const s5 = `With estimated close probability in the ${closeMeter.rangeLabel} range (confidence: ${closeMeter.confidence}), the offer is ${pct >= 65 ? "competitive" : "not yet market-ready"} for its price point.`;
 
+  // Sentence 6 (optional): price positioning if competitor data present
+  const sentences = [s1, s2, s3, s4, s5];
+  const benchmark = computePriceBenchmark(report, competitors);
+  if (benchmark.hasData) {
+    const avgStr = `$${benchmark.avgPrice.toLocaleString()}`;
+    const posMap: Record<PricePositionLabel, string> = {
+      Premium: `At ${benchmark.positionLabel} positioning (${(report.meta.price / benchmark.avgPrice * 100 - 100).toFixed(0)}% above the $${benchmark.avgPrice.toLocaleString()} competitor average), buyers will demand proportionally stronger proof and clearer differentiation.`,
+      Market:  `At ${benchmark.positionLabel} positioning (near the ${avgStr} competitor average), your close rate will hinge on differentiation quality and proof, not price.`,
+      Budget:  `At ${benchmark.positionLabel} positioning (below the ${avgStr} competitor average), consider raising the price alongside stronger proof to avoid attracting the wrong buyer.`,
+    };
+    sentences.push(posMap[benchmark.positionLabel]);
+  }
+
   return {
-    sentences: [s1, s2, s3, s4, s5],
+    sentences,
     topStrengthPillar: topPillar.name,
     topRiskPillar: bottomPillar.name,
+    priceBenchmark: benchmark,
   };
 }
