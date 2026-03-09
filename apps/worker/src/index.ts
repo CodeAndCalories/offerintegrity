@@ -150,6 +150,7 @@ export default {
         turnstileToken: string;
         uploadedFileKeys?: string[];
         competitors?: { name: string; price: string; promise: string }[];
+        endorselyReferral?: string;
       };
       try {
         body = await request.json();
@@ -157,7 +158,7 @@ export default {
         return errR("Invalid JSON");
       }
 
-      const { intake, email, turnstileToken, uploadedFileKeys = [], competitors = [] } = body;
+      const { intake, email, turnstileToken, uploadedFileKeys = [], competitors = [], endorselyReferral } = body;
       if (!email || !email.includes("@")) return errR("Valid email required");
       if (!turnstileToken) return errR("Turnstile token required");
 
@@ -211,7 +212,7 @@ export default {
         line_items: [lineItem],
         success_url: `${env.APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${env.APP_URL}/start`,
-        metadata: { reportToken, email },
+        metadata: { reportToken, email, endorsely_referral: endorselyReferral || "" },
       });
 
       record.stripeSessionId = session.id;
