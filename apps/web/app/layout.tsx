@@ -74,6 +74,7 @@ export default function RootLayout({
           async
           defer
         />
+        <script async src="https://assets.endorsely.com/endorsely.js" data-endorsely="a15668c6-a060-4e0e-b8b0-6bfd2410cf8f"></script>
       </head>
       <body>{children}</body>
     </html>
