@@ -187,23 +187,17 @@ export default {
         httpClient: stripe.default.createFetchHttpClient(),
       });
 
-      // Single price: use PRICE_ID if configured, otherwise fall back to price_data at $149
-      let lineItem: any;
-      if (env.PRICE_ID) {
-        lineItem = { price: env.PRICE_ID, quantity: 1 };
-      } else {
-        lineItem = {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "High-Ticket Offer Validation Report",
-              description: `7-pillar scored analysis for: ${intake.offerName}`,
-            },
-            unit_amount: 3900, // $39.00
+      const lineItem = {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "High-Ticket Offer Validation Report",
+            description: `7-pillar scored analysis for: ${intake.offerName}`,
           },
-          quantity: 1,
-        };
-      }
+          unit_amount: 3900, // $39.00
+        },
+        quantity: 1,
+      };
 
       const session = await stripeClient.checkout.sessions.create({
         payment_method_types: ["card"],
