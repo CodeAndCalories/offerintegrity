@@ -490,7 +490,7 @@ export default function DemoPage() {
               href="/start"
               className="inline-flex items-center gap-3 bg-gold text-ink px-10 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
             >
-              Validate My Offer — $149 →
+              Validate My Offer — $39 →
             </Link>
             <p className="mt-4 text-xs text-parchment-muted">Instant access. One-time. No subscription.</p>
           </div>

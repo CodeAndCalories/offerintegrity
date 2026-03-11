@@ -199,7 +199,7 @@ export default {
               name: "High-Ticket Offer Validation Report",
               description: `7-pillar scored analysis for: ${intake.offerName}`,
             },
-            unit_amount: 14900, // $149.00
+            unit_amount: 3900, // $39.00
           },
           quantity: 1,
         };

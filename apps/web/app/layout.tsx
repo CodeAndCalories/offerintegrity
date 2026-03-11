@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | OfferIntegrity",
   },
   description:
-    "Get a structured 7-pillar validation report for your high-ticket coaching or consulting offer. Scored analysis, identified risks, and a prioritized 30-day action plan. $149, instant delivery.",
+    "Get a structured 7-pillar validation report for your high-ticket coaching or consulting offer. Scored analysis, identified risks, and a prioritized 30-day action plan. $39, instant delivery.",
   keywords: [
     "high ticket offer validation",
     "offer validation report",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Know If Your High-Ticket Offer Will Sell — Before You Launch",
     description:
-      "A structured 7-pillar validation report for founders and consultants. Scored analysis + 30-day action plan. $149, instant delivery.",
+      "A structured 7-pillar validation report for founders and consultants. Scored analysis + 30-day action plan. $39, instant delivery.",
     images: ["/og-image.png"],
   },
   alternates: {

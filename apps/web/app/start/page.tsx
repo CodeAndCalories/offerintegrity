@@ -361,7 +361,7 @@ export default function StartPage() {
             {currentStep.isUpload && (
               <div className="space-y-6">
                 <div className="border border-[#2a2a2a] bg-ink-soft p-6">
-                  <p className="mono text-xs text-gold tracking-[0.2em] uppercase mb-3">Included with your $149 report</p>
+                  <p className="mono text-xs text-gold tracking-[0.2em] uppercase mb-3">Included with your $39 report</p>
                   <p className="text-sm text-parchment-dim leading-relaxed mb-6">
                     You can optionally upload up to {MAX_FILES} supporting files — sales decks, case studies, landing page screenshots, or testimonials. These are used to enrich your analysis and are <strong className="text-parchment font-normal">automatically deleted after 7 days</strong>.
                   </p>
@@ -565,7 +565,7 @@ export default function StartPage() {
                     Processing…
                   </>
                 ) : (
-                  "Proceed to Payment — $149"
+                  "Proceed to Payment — $39"
                 )}
               </button>
             )}
