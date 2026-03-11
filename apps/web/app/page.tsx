@@ -14,7 +14,7 @@ export default function Home() {
 
   const testimonials = [
     {
-      quote: "I'd been running ads on my coaching offer for three months and couldn't figure out why it wasn't converting. The report flagged the exact problem within the first two pillars. Worth every dollar.",
+      quote: "I'd been running ads on my coaching offer for three months and couldn't figure out why it wasn't converting. The report flagged the exact reason my offer wasn't converting within the first two pillars. Saved me months of guessing.",
       name: "M.T.",
       title: "Business Coach, Austin TX",
       tag: "Beta feedback",
@@ -61,15 +61,18 @@ export default function Home() {
             Validate your $2k–$20k coaching or consulting offer before you launch.
             Get a structured 7-pillar scorecard plus a prioritized 30-day action plan.
           </p>
-           <p className="text-sm text-parchment-dim mb-8">
+           <p className="text-sm text-parchment-dim mb-4">
             Used by coaches, consultants, and agencies building $2k–$20k offers.
+          </p>
+          <p className="text-sm text-gold mono mb-8">
+            $39 validation before you spend months building the wrong offer.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               href="/start"
               className="inline-flex items-center gap-3 bg-gold text-ink px-8 py-4 text-sm tracking-widest uppercase hover:bg-gold-light transition-colors"
             >
-              Get My Validation Report →
+              Get My Offer Score →
             </Link>
             <Link
               href="/demo"
@@ -109,6 +112,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="py-16 px-6 border-t border-[#1a1a1a]">
+        <div className="max-w-4xl mx-auto">
+          <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-6">How the validation works</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[#1a1a1a]">
+            {[
+              { n: "01", title: "Complete a short offer assessment", desc: "Answer structured questions about your offer, buyer, and launch plan. Takes about 10 minutes." },
+              { n: "02", title: "Scored across 7 validation pillars", desc: "Your offer is analyzed against the 7 pillars every high-ticket offer must satisfy. No vague feedback." },
+              { n: "03", title: "Receive an instant report with prioritized fixes", desc: "A scored verdict plus a 30-day action plan tells you exactly what to fix and in what order." },
+            ].map((item) => (
+              <div key={item.n} className="bg-ink px-8 py-8">
+                <p className="mono text-xs text-parchment-muted mb-4">{item.n}</p>
+                <h3 className="text-base font-light text-parchment mb-3">{item.title}</h3>
+                <p className="text-sm text-parchment-muted leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Credibility block */}
       <section className="py-12 px-6 border-t border-[#1a1a1a] bg-ink-soft">
         <div className="max-w-4xl mx-auto">
@@ -136,12 +159,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Not designed for */}
+      <section className="py-8 px-6 border-t border-[#1a1a1a] bg-ink-soft">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4">
+          <p className="mono text-xs text-parchment-muted tracking-[0.2em] uppercase shrink-0">Not designed for</p>
+          <div className="flex flex-wrap gap-3">
+            {["SaaS products", "Low-ticket courses", "Early-stage ideas without a defined offer"].map((item) => (
+              <span key={item} className="text-xs text-parchment-muted border border-[#222] px-3 py-1.5 mono">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pillars overview */}
       <section className="py-24 px-6 border-t border-[#1a1a1a]">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
             <p className="mono text-xs text-gold tracking-[0.3em] uppercase mb-4">The Framework</p>
             <h2 className="text-3xl md:text-4xl font-light">7 Pillars of Offer Integrity</h2>
+            <p className="text-sm text-parchment-muted mt-4 max-w-xl leading-relaxed">
+              Built from analysis patterns found in hundreds of high-ticket consulting and coaching offers.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#1a1a1a]">
             {pillars.map((p) => (
